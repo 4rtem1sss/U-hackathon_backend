@@ -20,3 +20,6 @@ coverage/
 *.log
 .DS_Store
 .vercel
+
+# local agent worktrees
+.claude/

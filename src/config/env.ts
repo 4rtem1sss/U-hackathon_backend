@@ -41,6 +41,8 @@ export const envSchema = z.object({
   ),
   /** Only needed if part 4 runs as a separate service (HTTP RPC form). */
   INTERNAL_RPC_SECRET: optionalNonEmpty.pipe(z.string().min(32, "must be at least 32 characters").optional()),
+  /** Which SettlementModule to use: in-memory fake (tests/dev) or part 4's real Fuji module. */
+  SETTLEMENT_MODULE: optionalNonEmpty.pipe(z.enum(["fake", "fuji"]).optional()),
   QUOTE_TTL_SECONDS: positiveIntFromString(300),
   SETTLEMENT_CONFIRMATIONS: positiveIntFromString(2),
   ALLOWED_ORIGINS: z
