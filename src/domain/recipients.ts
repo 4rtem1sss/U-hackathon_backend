@@ -38,7 +38,8 @@ export const newRecipientBody = z.strictObject({
     .trim()
     .min(1)
     .max(60)
-    .regex(/^[\p{L}\p{M} .'-]+$/u),
+    // At least one letter: "-" or a lone tone mark is not a name.
+    .regex(/^(?=.*\p{L})[\p{L}\p{M} .'-]+$/u),
   bankCode: z.enum(BANK_CODES),
   accountNumber: z
     .string()

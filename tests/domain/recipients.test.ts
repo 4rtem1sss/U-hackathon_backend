@@ -31,6 +31,10 @@ describe("recipient rules", () => {
     expect(ok({ ...base, name: "Agent 007" }).success).toBe(false);
   });
 
+  it("rejects names with no letter in them", () => {
+    for (const name of ["-", ".", "'", ". - .", "้"]) expect(ok({ ...base, name }).success).toBe(false);
+  });
+
   it("normalizes account numbers with dashes and spaces", () => {
     expect(normalizeAccountNumber("123-4-56789-0")).toBe("1234567890");
     expect(ok({ ...base, accountNumber: "123 4 56789 0" }).data?.accountNumber).toBe("1234567890");
