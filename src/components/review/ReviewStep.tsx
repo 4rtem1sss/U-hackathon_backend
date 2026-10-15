@@ -86,7 +86,7 @@ export function ReviewStep({ quote, recipient, onEdit, onNewQuote, quoting }: Pr
         <p className="tabular mt-1 text-4xl font-semibold tracking-tight text-brand">
           {formatMinor(quote.destinationNetMinor, "THB", lang)}
         </p>
-        <dl className="mt-6 space-y-3 border-t pt-6 text-sm">
+        <dl className="mt-6 space-y-3 border-t pt-6 text-base">
           <SummaryRow label={t("review.youSend")} value={amountText} strong />
           <SummaryRow label={t("send.fee")} value={formatMinor(quote.feeMinor, "USD", lang)} />
           <SummaryRow label={t("send.rate")} value={formatRate(quote.fxRateNumerator, quote.fxRateDenominator, lang)} />

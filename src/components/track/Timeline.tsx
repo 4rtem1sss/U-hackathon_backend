@@ -12,7 +12,7 @@ function StepIcon({ state }: { state: StepState }) {
   const base = "relative z-10 grid size-10 shrink-0 place-items-center rounded-full border-2";
   switch (state) {
     case "done":
-      return <span className={cn(base, "border-brand bg-brand text-white")}><Check className="draw-check size-5" aria-hidden /></span>;
+      return <span className={cn(base, "border-done bg-done text-foreground")}><Check className="draw-check size-5" aria-hidden /></span>;
     case "active":
       return <span className={cn(base, "border-brand bg-card text-brand")}><Loader2 className="size-5 animate-spin" aria-hidden /></span>;
     case "failed":

@@ -18,7 +18,7 @@ export function BankSheet({ open, onOpenChange, amountText, paying, onConfirm }:
   const { t } = useT();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" showCloseButton={!paying}>
+      <DialogContent className="bg-card sm:max-w-md" showCloseButton={!paying}>
         <DialogHeader>
           <DialogTitle>{t("sheet.title")}</DialogTitle>
           <DialogDescription>{t("sheet.simNote")}</DialogDescription>

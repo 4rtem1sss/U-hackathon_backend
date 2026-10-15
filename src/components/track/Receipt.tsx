@@ -43,7 +43,7 @@ export function Receipt({ snapshot: s, onSendAnother }: { snapshot: TransferSnap
       {/* Server evidence, verbatim and English only (spec section 2). */}
       <p lang="en" className="mt-1 text-xs text-muted-foreground">{s.receipt.summary}</p>
 
-      <dl className="mt-6 space-y-3 border-t pt-6 text-sm">
+      <dl className="mt-6 space-y-3 border-t pt-6 text-base">
         <SummaryRow label={t("receipt.youSent")} value={formatMinor(a.sourceDebitMinor, "USD", lang)} strong />
         <SummaryRow label={t("send.fee")} value={formatMinor(a.feeMinor, "USD", lang)} />
         <SummaryRow label={t("send.rate")} value={formatRate(s.fx.rateNumerator, s.fx.rateDenominator, lang)} />

@@ -24,6 +24,7 @@
   --ring: #2e4057;
   --brand: #2e4057;
   --pending: #b45309;
+  --pending-ink: #92400e; /* pending text on pending tints (AA) */
   --done: #8bc34a; /* fill only */
   --done-text: #3f7d20;
   --highlight: #edae49; /* spec --accent: fill only, never text */
@@ -50,6 +51,7 @@
   --color-ring: var(--ring);
   --color-brand: var(--brand);
   --color-pending: var(--pending);
+  --color-pending-ink: var(--pending-ink);
   --color-done: var(--done);
   --color-done-text: var(--done-text);
   --color-highlight: var(--highlight);

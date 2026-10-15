@@ -117,7 +117,7 @@ export function TrackView({ id }: { id: string }) {
           </p>
         )}
         {view.issueMessage && (
-          <p role="status" className="mt-4 flex items-start gap-2 rounded-xl bg-pending/10 p-3 text-sm text-pending">
+          <p role="status" className="mt-4 flex items-start gap-2 rounded-xl bg-pending/10 p-3 text-sm text-pending-ink">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
             {view.issueMessage}
           </p>

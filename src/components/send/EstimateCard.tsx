@@ -15,7 +15,7 @@ export function EstimateCard({ estimate }: { estimate: Estimate | null }) {
       <p className="tabular mt-2 text-4xl font-semibold tracking-tight text-brand">
         {estimate ? formatMinor(estimate.destinationNetMinor, "THB", lang) : "—"}
       </p>
-      <dl className="mt-6 space-y-3 text-sm">
+      <dl className="mt-6 space-y-3 text-base">
         <SummaryRow label={t("send.fee")} value={estimate ? formatMinor(estimate.feeMinor, "USD", lang) : "—"} />
         <SummaryRow label={t("send.rate")} value={formatRate(FIXTURE.rateNumerator.toString(), FIXTURE.rateDenominator.toString(), lang)} />
         <SummaryRow label={t("send.arrival")} value={t("send.timing")} />
