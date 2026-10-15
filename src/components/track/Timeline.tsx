@@ -63,6 +63,13 @@ export function Timeline({ view, snapshot, className }: { view: TransferView; sn
                     step.state === "done" ? "scale-y-100" : "scale-y-0",
                   )}
                 />
+                {step.id === "settlement" && step.state === "active" && (
+                  <span className="absolute -inset-x-2 inset-y-0 overflow-hidden">
+                    <span className="token-travel absolute inset-x-0 top-0 h-full">
+                      <span className="absolute bottom-0 left-1/2 size-2.5 -translate-x-1/2 rounded-full bg-primary ring-2 ring-brand" />
+                    </span>
+                  </span>
+                )}
               </span>
             )}
             <StepIcon state={step.state} />

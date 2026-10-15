@@ -82,3 +82,27 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+@keyframes centme-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-check path,
+.draw-check polyline {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: centme-draw 300ms ease-out forwards;
+}
+
+@keyframes centme-travel {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.token-travel {
+  animation: centme-travel 1.2s ease-in-out infinite;
+}

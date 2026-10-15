@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { estimateQuote, formatMinor, formatRate, formatTokenUnits, minorToInput, parseUsdInput } from "@/web/money";
+import { estimateQuote, formatMinor, interpolateMinor, formatRate, formatTokenUnits, minorToInput, parseUsdInput } from "@/web/money";
 
 describe("parseUsdInput", () => {
   it.each([
@@ -53,5 +53,15 @@ describe("formatting", () => {
   it("turns minor units back into input text", () => {
     expect(minorToInput("1050")).toBe("10.50");
     expect(minorToInput("100")).toBe("1.00");
+  });
+});
+
+describe("interpolateMinor", () => {
+  it("interpolates integer minor units and clamps progress", () => {
+    expect(interpolateMinor("34300", 0)).toBe("0");
+    expect(interpolateMinor("34300", 0.5)).toBe("17150");
+    expect(interpolateMinor("34300", 1)).toBe("34300");
+    expect(interpolateMinor("34300", 1.7)).toBe("34300");
+    expect(interpolateMinor("34300", -1)).toBe("0");
   });
 });

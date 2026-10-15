@@ -8,12 +8,13 @@ import type { TransferSnapshot } from "@/web/api/types";
 import { formatDateTime, maskAccount, shortHash } from "@/web/format";
 import { useT } from "@/web/i18n/LanguageProvider";
 import { formatMinor, formatRate, formatTokenUnits } from "@/web/money";
+import { useCountUp } from "@/web/useCountUp";
 
 export function Receipt({ snapshot: s, onSendAnother }: { snapshot: TransferSnapshot; onSendAnother(): void }) {
   const { t, lang } = useT();
-  if (!s.receipt) return null;
   const a = s.amounts;
-  const received = a.destinationNetMinor;
+  const received = useCountUp(a.destinationNetMinor);
+  if (!s.receipt) return null;
 
   async function copyLink() {
     try {

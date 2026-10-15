@@ -76,3 +76,9 @@ export function minorToInput(minor: string): string {
   const v = BigInt(minor);
   return `${v / 100n}.${(v % 100n).toString().padStart(2, "0")}`;
 }
+
+/** Animation helper: integer-only value at a progress in [0, 1]. */
+export function interpolateMinor(target: string, progress: number): string {
+  const p = Math.min(1, Math.max(0, progress));
+  return ((BigInt(target) * BigInt(Math.round(p * 1000))) / 1000n).toString();
+}
