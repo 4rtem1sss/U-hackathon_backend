@@ -82,6 +82,39 @@ export interface AmountFields {
   fixtureVersion: string;
 }
 
+export type QuoteCheckResult = "PASS" | "REJECT" | "REVIEW";
+
+export interface DemoSessionRow {
+  id: string;
+  tokenHash: string;
+  ownerId: string;
+  createdAt: Date;
+  expiresAt: Date;
+}
+
+export interface RecipientRow {
+  id: string;
+  ownerId: string;
+  name: string;
+  country: string;
+  currency: string;
+  bankLabel: string;
+  accountDisplay: string;
+  isSynthetic: boolean;
+  createdAt: Date;
+}
+
+export interface QuoteCheckRow {
+  id: string;
+  ownerId: string;
+  recipientId: string;
+  sourceDebitMinor: AmountString;
+  scenario: QuoteCheckResult;
+  result: QuoteCheckResult;
+  fixtureVersion: string;
+  createdAt: Date;
+}
+
 export interface QuoteRow extends AmountFields {
   id: string;
   ownerId: string;
@@ -90,6 +123,8 @@ export interface QuoteRow extends AmountFields {
   sourceCountry: string;
   destinationCountry: string;
   chainId: number;
+  checkId: string | null;
+  checkResult: "PASS" | null;
   status: QuoteStatus;
   createdAt: Date;
   expiresAt: Date;

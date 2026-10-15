@@ -10,3 +10,6 @@ export * from "./repos/fundingAttempts";
 export * from "./repos/payoutAttempts";
 export * from "./repos/quotes";
 export * from "./repos/settlementAttempts";
+export * from "./repos/sessions";
+export * from "./repos/recipients";
+export * from "./repos/quoteChecks";

@@ -12,6 +12,8 @@ export const ID_PREFIX = {
   settlementAttempt: "stl",
   payout: "pay",
   receipt: "rct",
+  owner: "own",
+  quoteCheck: "chk",
 } as const;
 
 export type IdPrefix = (typeof ID_PREFIX)[keyof typeof ID_PREFIX];
