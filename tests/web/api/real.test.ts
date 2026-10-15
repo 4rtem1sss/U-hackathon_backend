@@ -66,3 +66,31 @@ describe("real client", () => {
     await expect(api.getRecipients()).rejects.toBeInstanceOf(NetworkError);
   });
 });
+
+describe("real client hardening", () => {
+  it("marks schema-drifted snapshots so the UI can hold", async () => {
+    const { isDrifted } = await import("@/web/api/drift");
+    const drifted = { ...contractSnapshotExample, amounts: { ...contractSnapshotExample.amounts, destinationNetMinor: "343.00" } };
+    const api = createRealClient({ fetchImpl: vi.fn().mockResolvedValue(json(200, { data: drifted, meta })) });
+    expect(isDrifted(await api.getTransfer("transfer_demo_001"))).toBe(true);
+    const ok = createRealClient({ fetchImpl: vi.fn().mockResolvedValue(json(200, { data: contractSnapshotExample, meta })) });
+    expect(isDrifted(await ok.getTransfer("transfer_demo_001"))).toBe(false);
+  });
+
+  it("shares one session request across concurrent 401s", async () => {
+    const unauth = () => json(401, { error: { code: "UNAUTHENTICATED", message: "No session.", retryable: false } });
+    const session = () => json(201, { data: { sessionId: "s1", mode: "DEMO", expiresAt: "2026-10-17T00:00:00Z" }, meta });
+    let authed = false;
+    const fetchImpl = vi.fn(async (path: string) => {
+      if (path === "/api/demo/session") {
+        await new Promise((r) => setTimeout(r, 5));
+        authed = true;
+        return session();
+      }
+      return authed ? json(200, { data: contractSnapshotExample, meta }) : unauth();
+    });
+    const api = createRealClient({ fetchImpl: fetchImpl as unknown as typeof fetch });
+    await Promise.all([api.getTransfer("a"), api.getTransfer("b"), api.createSession()]);
+    expect(fetchImpl.mock.calls.filter((c) => c[0] === "/api/demo/session")).toHaveLength(1);
+  });
+});

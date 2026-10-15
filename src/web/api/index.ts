@@ -35,3 +35,15 @@ export function createRoutedClient(modes: EndpointModes, real: ApiClient, mock: 
     retryPayout: (id, key) => pick("transfers").retryPayout(id, key),
   };
 }
+
+/** The backend only accepts a quote stored under its own session cookie, so the flip order is fixed. */
+export function endpointWarnings(modes: EndpointModes): string[] {
+  const warnings: string[] = [];
+  if (modes.quotes === "real" && modes.session !== "real") {
+    warnings.push("quotes is real but session is mock: the backend will reject quote calls without its session cookie.");
+  }
+  if (modes.transfers === "real" && (modes.session !== "real" || modes.quotes !== "real")) {
+    warnings.push("transfers is real but session or quotes is mock: the backend only accepts its own quotes. Flip session,recipients,quotes first.");
+  }
+  return warnings;
+}

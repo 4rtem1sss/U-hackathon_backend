@@ -28,3 +28,13 @@ describe("endpoint routing", () => {
     expect(await api.getTransfer("t1")).toBe("mock");
   });
 });
+
+describe("endpoint mode warnings", () => {
+  it("flags real quotes or transfers without a real session", async () => {
+    const { endpointWarnings } = await import("@/web/api/index");
+    expect(endpointWarnings(parseRealEndpoints("session,recipients,quotes"))).toEqual([]);
+    expect(endpointWarnings(parseRealEndpoints("all"))).toEqual([]);
+    expect(endpointWarnings(parseRealEndpoints("transfers"))).toHaveLength(1);
+    expect(endpointWarnings(parseRealEndpoints("session,recipients,transfers"))).toHaveLength(1);
+  });
+});

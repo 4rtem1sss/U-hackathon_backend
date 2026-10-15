@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ntfyNotifier } from "../notify";
 import { browserStorage } from "../storage";
 import type { ApiClient } from "./client";
-import { createRoutedClient, parseRealEndpoints, type EndpointModes } from "./index";
+import { createRoutedClient, endpointWarnings, parseRealEndpoints, type EndpointModes } from "./index";
 import { createMockClient } from "./mock";
 import { createRealClient } from "./real";
 
@@ -16,6 +16,7 @@ const ApiContext = createContext<ApiContextValue | null>(null);
 export function ApiProvider({ children }: { children: ReactNode }) {
   const [value] = useState<ApiContextValue>(() => {
     const modes = parseRealEndpoints(process.env.NEXT_PUBLIC_REAL_ENDPOINTS);
+    for (const w of endpointWarnings(modes)) console.warn(`[CentMe] NEXT_PUBLIC_REAL_ENDPOINTS: ${w}`);
     const mock = createMockClient({
       storage: browserStorage("local"),
       notify: ntfyNotifier(process.env.NEXT_PUBLIC_NTFY_TOPIC),

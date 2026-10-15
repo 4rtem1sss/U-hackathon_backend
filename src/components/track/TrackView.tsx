@@ -7,7 +7,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/web/api/ApiProvider";
-import { isApiError, NetworkError } from "@/web/api/errors";
+import { isDrifted } from "@/web/api/drift";
+import { ApiError, isApiError, NetworkError } from "@/web/api/errors";
 import { getOrCreateKey } from "@/web/idempotency";
 import { errorText } from "@/web/i18n/errorText";
 import { useT } from "@/web/i18n/LanguageProvider";
@@ -93,6 +94,8 @@ export function TrackView({ id }: { id: string }) {
     );
   }
 
+  if (isDrifted(snapshot)) return <HoldCard />;
+
   const view = toView(snapshot);
   const a = snapshot.amounts;
 
@@ -114,6 +117,12 @@ export function TrackView({ id }: { id: string }) {
           <p role="status" className="mt-4 flex items-center gap-2 rounded-xl bg-muted p-3 text-sm text-muted-foreground">
             <WifiOff className="size-4 shrink-0" aria-hidden />
             {t("track.offline")}
+          </p>
+        )}
+        {error instanceof ApiError && !isApiError(error, "NOT_FOUND") && (
+          <p role="status" className="mt-4 flex items-start gap-2 rounded-xl bg-pending/10 p-3 text-sm text-pending-ink">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+            {errorText(error, t)}
           </p>
         )}
         {view.issueMessage && (
@@ -139,5 +148,19 @@ export function TrackView({ id }: { id: string }) {
 
       {view.showReceipt && <Receipt snapshot={snapshot} onSendAnother={() => router.push("/")} />}
     </div>
+  );
+}
+
+/** Shown when the server's snapshot does not match the contract (spec: log and continue with the hold state). */
+export function HoldCard() {
+  const { t } = useT();
+  return (
+    <section className="mx-auto max-w-xl rounded-2xl border bg-card p-8 text-center shadow-sm">
+      <AlertTriangle className="mx-auto size-8 text-pending" aria-hidden />
+      <h1 className="mt-4 text-2xl font-semibold">{t("track.headline.hold")}</h1>
+      <Button asChild className="mt-6 h-12 text-base font-semibold">
+        <Link href="/">{t("action.START_OVER")}</Link>
+      </Button>
+    </section>
   );
 }

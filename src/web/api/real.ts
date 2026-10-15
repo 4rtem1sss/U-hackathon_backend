@@ -1,7 +1,8 @@
 import type { z } from "zod";
 import type { ApiClient } from "./client";
+import { markDrifted } from "./drift";
 import { ApiError, NetworkError } from "./errors";
-import { envelope, ErrorEnvelopeSchema, QuoteSchema, RecipientsSchema, SessionSchema, TransferSnapshotSchema } from "./types";
+import { envelope, ErrorEnvelopeSchema, QuoteSchema, RecipientsSchema, SessionSchema, TransferSnapshotSchema, type Session } from "./types";
 
 const SESSION_PATH = "/api/demo/session";
 
@@ -12,6 +13,12 @@ export function createRealClient(
 ): ApiClient {
   const doFetch: typeof fetch = opts.fetchImpl ?? ((input, init) => fetch(input, init));
   const report = opts.onSchemaMismatch ?? (() => {});
+  // One session request at a time: the provider and any concurrent 401 retries share it.
+  let sessionInFlight: Promise<Session> | null = null;
+  const ensureSession = (): Promise<Session> =>
+    (sessionInFlight ??= request("POST", SESSION_PATH, SessionSchema, {}, undefined, true).finally(() => {
+      sessionInFlight = null;
+    }));
 
   async function request<S extends z.ZodType>(
     method: "GET" | "POST",
@@ -52,7 +59,7 @@ export function createRealClient(
         retryAfterSeconds: Number(res.headers.get("Retry-After")) || null,
       });
       if (error.code === "UNAUTHENTICATED" && !retried && path !== SESSION_PATH) {
-        await request("POST", SESSION_PATH, SessionSchema, {}, undefined, true);
+        await ensureSession();
         return request(method, path, schema, body, idempotencyKey, true);
       }
       throw error;
@@ -61,7 +68,9 @@ export function createRealClient(
     const parsed = envelope(schema).safeParse(json);
     if (!parsed.success) {
       report(`${method} ${path}`, parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`));
-      return (json as { data: z.infer<S> }).data;
+      const data = (json as { data?: unknown } | null)?.data;
+      if (typeof data === "object" && data !== null) markDrifted(data);
+      return data as z.infer<S>;
     }
     return (parsed.data as { data: z.infer<S> }).data;
   }
@@ -69,7 +78,7 @@ export function createRealClient(
   const t = (id: string) => encodeURIComponent(id);
 
   return {
-    createSession: () => request("POST", SESSION_PATH, SessionSchema, {}),
+    createSession: () => ensureSession(),
     getRecipients: async () => (await request("GET", "/api/recipients", RecipientsSchema)).recipients,
     createQuote: (input) => request("POST", "/api/quotes", QuoteSchema, input),
     createTransfer: (input, key) => request("POST", "/api/transfers", TransferSnapshotSchema, input, key),

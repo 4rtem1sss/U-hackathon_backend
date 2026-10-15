@@ -1,4 +1,5 @@
 import type { ApiClient } from "./api/client";
+import { ApiError } from "./api/errors";
 import type { TransferSnapshot } from "./api/types";
 
 export type Schedule = (fn: () => void, ms: number) => () => void;
@@ -35,6 +36,8 @@ export function startTransferPoller(
   let stopped = false;
   let running = false;
   let failures = 0;
+  let retryAfterMs = 0;
+  let blocked = false;
   let cancel: (() => void) | null = null;
 
   function accept(s: TransferSnapshot) {
@@ -51,14 +54,19 @@ export function startTransferPoller(
       accept(await deps.api.getTransfer(id));
       if (latest?.nextAction === "ADVANCE") accept(await deps.api.advance(id));
       failures = 0;
+      retryAfterMs = 0;
+      blocked = false;
     } catch (e) {
       failures += 1;
+      retryAfterMs = e instanceof ApiError && e.retryAfterSeconds ? e.retryAfterSeconds * 1000 : 0;
+      // 403 (demo disabled, origin not allowed) is not retried around; kick() can resume.
+      blocked = e instanceof ApiError && e.status === 403;
       deps.onError(e);
     } finally {
       running = false;
     }
-    if (stopped) return;
-    if (failures > 0 || latest?.nextAction === "ADVANCE") cancel = schedule(tick, backoffDelay(failures));
+    if (stopped || blocked) return;
+    if (failures > 0 || latest?.nextAction === "ADVANCE") cancel = schedule(tick, Math.max(backoffDelay(failures), retryAfterMs));
   }
 
   void tick();

@@ -1,3 +1,4 @@
+import { isDrifted } from "./api/drift";
 import type { TransferSnapshot } from "./api/types";
 import type { MessageKey } from "./i18n/en";
 
@@ -44,6 +45,22 @@ function holdStates(s: TransferSnapshot): States {
 }
 
 export function toView(s: TransferSnapshot): TransferView {
+  if (isDrifted(s)) {
+    // Contract drift: show a hold and read nothing else from the payload.
+    return {
+      steps: ORDER.map((id, i) => ({
+        id,
+        state: i === 0 ? "hold" : "todo",
+        tag: id === "settlement" ? "TESTNET" : "SIMULATED",
+        labelKey: id === "settlement" ? "step.settlement" : (`step.${id}` as MessageKey),
+      })),
+      headlineKey: "track.headline.hold",
+      action: null,
+      showReceipt: false,
+      issueMessage: null,
+      notified: false,
+    };
+  }
   const base = {
     issueMessage: s.lastIssue?.message ?? null,
     notified: s.notification.status === "SENT",

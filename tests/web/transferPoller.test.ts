@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { snapshotWith } from "@/web/api/fixtures";
+import { ApiError } from "@/web/api/errors";
 import { createMockClient, MOCK_RECIPIENT } from "@/web/api/mock";
 import type { TransferSnapshot } from "@/web/api/types";
 import { backoffDelay, startTransferPoller, type Schedule } from "@/web/transferPoller";
@@ -95,5 +96,26 @@ describe("transfer poller", () => {
     poller.kick();
     await flush();
     expect(api.getTransfer).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("transfer poller error policy", () => {
+  const apiError = (status: number, code: string, retryable: boolean, retryAfterSeconds: number | null = null) =>
+    new ApiError({ status, code, message: code, retryable, fieldErrors: {}, requestId: "r", retryAfterSeconds });
+
+  it("waits at least Retry-After on rate limits", async () => {
+    const api = { getTransfer: vi.fn().mockRejectedValueOnce(apiError(429, "RATE_LIMITED", true, 30)), advance: vi.fn() };
+    const clock = manualSchedule();
+    startTransferPoller("t", { api, onSnapshot: () => {}, onError: () => {}, schedule: clock.schedule });
+    await flush();
+    expect(clock.queue.map((q) => q.ms)).toEqual([30000]);
+  });
+
+  it("stops on a 403 instead of retrying around it", async () => {
+    const api = { getTransfer: vi.fn().mockRejectedValue(apiError(403, "DEMO_DISABLED", false)), advance: vi.fn() };
+    const clock = manualSchedule();
+    startTransferPoller("t", { api, onSnapshot: () => {}, onError: () => {}, schedule: clock.schedule });
+    await flush();
+    expect(clock.queue).toHaveLength(0);
   });
 });

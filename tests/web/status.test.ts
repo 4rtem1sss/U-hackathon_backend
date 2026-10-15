@@ -70,3 +70,14 @@ describe("stepTime", () => {
     expect(stepTime(s, "settlement")).toBeNull();
   });
 });
+
+describe("toView on drifted data", () => {
+  it("holds a schema-drifted snapshot even when its status is known", async () => {
+    const { markDrifted } = await import("@/web/api/drift");
+    const s = markDrifted(snapshotWith({ status: "COMPLETED_SIMULATED" }));
+    const v = toView(s);
+    expect(v.headlineKey).toBe("track.headline.hold");
+    expect(v.showReceipt).toBe(false);
+    expect(v.action).toBeNull();
+  });
+});
