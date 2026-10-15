@@ -38,6 +38,17 @@ export type SettlementSubstatus = (typeof SETTLEMENT_SUBSTATUSES)[number];
 export const PAYOUT_SUBSTATUSES = ["NOT_STARTED", "PENDING", "PAID", "FAILED", "UNKNOWN"] as const;
 export type PayoutSubstatus = (typeof PAYOUT_SUBSTATUSES)[number];
 
+/** Recipient notification channels. Only ntfy push today. */
+export const NOTIFICATION_CHANNELS = ["NTFY"] as const;
+export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
+
+/**
+ * Recipient notification status. NOT_STARTED until the transfer completes;
+ * DISABLED when no ntfy topic is configured; PENDING while the push is in flight.
+ */
+export const NOTIFICATION_STATUSES = ["NOT_STARTED", "PENDING", "SENT", "FAILED", "DISABLED"] as const;
+export type NotificationStatus = (typeof NOTIFICATION_STATUSES)[number];
+
 export const QUOTE_STATUSES = ["OPEN", "ACCEPTED", "EXPIRED"] as const;
 export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
 

@@ -1,6 +1,8 @@
 import type {
   DemoScenario,
   FundingSubstatus,
+  NotificationChannel,
+  NotificationStatus,
   PayoutSubstatus,
   Purpose,
   SettlementSubstatus,
@@ -53,6 +55,13 @@ export interface PayoutState {
   reference: string | null;
 }
 
+export interface NotificationState {
+  channel: NotificationChannel;
+  status: NotificationStatus;
+  /** Set exactly when status is SENT. */
+  sentAt: Date | null;
+}
+
 /** Domain view of a `transfers` row (camelCase, bigint amounts, Date timestamps). */
 export interface TransferRecord {
   id: string;
@@ -68,6 +77,7 @@ export interface TransferRecord {
   funding: FundingState;
   settlement: SettlementState;
   payout: PayoutState;
+  notification: NotificationState;
   lastIssue: Issue | null;
   receipt: Receipt | null;
   createdAt: Date;
@@ -121,6 +131,7 @@ export function newTransferRecord(
     funding: { status: "PENDING", reference: null },
     settlement: { status: "NOT_STARTED", txHash: null, evidence: null, verifiedAt: null },
     payout: { status: "NOT_STARTED", reference: null },
+    notification: { channel: "NTFY", status: "NOT_STARTED", sentAt: null },
     lastIssue: null,
     receipt: null,
     createdAt: at,

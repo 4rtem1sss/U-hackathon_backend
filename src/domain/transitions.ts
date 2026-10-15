@@ -4,6 +4,7 @@ import type { Issue } from "./settlement-types";
 import type {
   FundingState,
   NewTransferEvent,
+  NotificationState,
   PayoutState,
   SettlementState,
   TransferRecord,
@@ -144,6 +145,11 @@ export function checkInvariants(r: TransferRecord): string[] {
     v.push("receipt must be set exactly when COMPLETED_SIMULATED");
   }
   if (p.status !== "NOT_STARTED" && !confirmed) v.push("payout cannot start before settlement is CONFIRMED");
+  const n = r.notification;
+  if (n.status !== "NOT_STARTED" && r.status !== "COMPLETED_SIMULATED") {
+    v.push("notification can only start once the transfer is COMPLETED_SIMULATED");
+  }
+  if ((n.status === "SENT") !== (n.sentAt !== null)) v.push("notification.sentAt must be set exactly when SENT");
 
   // Per-status variants.
   switch (r.status) {
@@ -231,6 +237,7 @@ export interface TransferPatch {
   funding?: Partial<FundingState>;
   settlement?: Partial<SettlementState>;
   payout?: Partial<PayoutState>;
+  notification?: Partial<NotificationState>;
   lastIssue?: Issue | null;
   receipt?: Receipt | null;
 }
@@ -241,6 +248,7 @@ function applyPatch(record: TransferRecord, patch: TransferPatch, now: Date): Tr
     funding: { ...record.funding, ...patch.funding },
     settlement: { ...record.settlement, ...patch.settlement },
     payout: { ...record.payout, ...patch.payout },
+    notification: { ...record.notification, ...patch.notification },
     lastIssue: patch.lastIssue !== undefined ? patch.lastIssue : record.lastIssue,
     receipt: patch.receipt !== undefined ? patch.receipt : record.receipt,
     version: record.version + 1,

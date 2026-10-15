@@ -69,6 +69,10 @@ prefix for any of them.
 | `QUOTE_TTL_SECONDS` | no | `300` | Quote validity |
 | `SETTLEMENT_CONFIRMATIONS` | no | `2` | Confirmations before a receipt counts as verified |
 | `ALLOWED_ORIGINS` | no | empty | Comma list of extra origins allowed on mutations; the request's own host is always allowed |
+| `NTFY_TOPIC` | no | empty | ntfy topic for the recipient push when a transfer completes; empty = notification `DISABLED`. ntfy.sh topics are public, so use a long random name |
+| `NTFY_BASE_URL` | no | `https://ntfy.sh` | ntfy server |
+| `NTFY_TOKEN` | no | empty | Bearer token for a protected ntfy topic |
+| `NTFY_TIMEOUT_MS` | no | `3000` | Timeout for the push request |
 
 ## Layout
 
@@ -124,3 +128,7 @@ SCENARIO=HAPPY_PATH bash scripts/demo-flow.sh              # or PAYOUT_FAILED / 
 ```
 
 Each seeded quote can be used once; run `demo-seed.mjs` again for the next scenario. Use `pnpm test` with `DATABASE_URL` set to run the full test suite, including the DB and API tests.
+
+## Recipient notification (ntfy)
+
+Every snapshot has `notification: { channel: "NTFY", status, sentAt }`. Status is `NOT_STARTED` until the transfer reaches `COMPLETED_SIMULATED`. The `/advance` call that completes the transfer then sends one ntfy push from the server and records `SENT` (with `sentAt`) or `FAILED`; with no `NTFY_TOPIC` it records `DISABLED`. A failed push never blocks completion (`nextAction` stays `NONE`); any later `/advance` call retries it. Delivery is at-least-once: a crash between the push and the DB write can send it twice. The frontend shows "Recipient notified" when `notification.status === "SENT"`.

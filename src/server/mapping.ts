@@ -74,6 +74,11 @@ export function rowToRecord(row: TransferRow): TransferRecord {
       verifiedAt: row.settlementVerifiedAt === null ? null : toDate(row.settlementVerifiedAt, "settlementVerifiedAt"),
     },
     payout: { status: row.payoutStatus, reference: row.payoutReference },
+    notification: {
+      channel: row.notificationChannel,
+      status: row.notificationStatus,
+      sentAt: row.notificationSentAt === null ? null : toDate(row.notificationSentAt, "notificationSentAt"),
+    },
     lastIssue: row.lastIssue,
     receipt: receiptFromJson(row.receipt),
     createdAt: toDate(row.createdAt, "createdAt"),
@@ -131,6 +136,8 @@ export function recordToPatch(record: TransferRecord): DbTransferPatch {
     settlementVerifiedAt: record.settlement.verifiedAt,
     payoutStatus: record.payout.status,
     payoutReference: record.payout.reference,
+    notificationStatus: record.notification.status,
+    notificationSentAt: record.notification.sentAt,
     lastIssue: record.lastIssue,
     receipt:
       record.receipt === null

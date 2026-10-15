@@ -24,7 +24,7 @@ const FX = { mode: "SIMULATED", fixtureVersion: "fixture-us-th-v1", rateNumerato
 /** Key order of the api-contract section 6 example. */
 const TOP_KEYS = [
   "id", "quoteId", "status", "version", "mode", "purpose", "demoScenario", "recipient", "amounts", "funding", "fx",
-  "settlement", "payout", "events", "lastIssue", "nextAction", "receipt", "createdAt", "updatedAt",
+  "settlement", "payout", "notification", "events", "lastIssue", "nextAction", "receipt", "createdAt", "updatedAt",
 ];
 const iso = (d: Date) => d.toISOString();
 
@@ -67,6 +67,7 @@ describe("toSnapshot()", () => {
         verifiedAt: null,
       },
       payout: { mode: "SIMULATED", status: "NOT_STARTED", reference: null },
+      notification: { channel: "NTFY", status: "NOT_STARTED", sentAt: null },
       events: [{ sequence: 1, status: "FUNDING_PENDING", createdAt: "2026-10-15T15:01:00.000Z" }],
       lastIssue: null,
       nextAction: "SIMULATE_FUNDING",
@@ -104,6 +105,7 @@ describe("toSnapshot()", () => {
         verifiedAt: null,
       },
       payout: { mode: "SIMULATED", status: "NOT_STARTED", reference: null },
+      notification: { channel: "NTFY", status: "NOT_STARTED", sentAt: null },
       events: [
         { sequence: 1, status: "FUNDING_PENDING", createdAt: iso(at(0)) },
         { sequence: 2, status: "FUNDED_SIMULATED", createdAt: iso(at(1)) },

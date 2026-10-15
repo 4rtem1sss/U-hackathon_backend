@@ -9,6 +9,7 @@ import type {
   FundingSubstatus,
   Issue,
   Json,
+  NotificationStatus,
   PayoutSubstatus,
   Purpose,
   RecipientSnapshot,
@@ -61,6 +62,8 @@ export interface TransferPatch {
   settlementVerifiedAt?: Date | null;
   payoutStatus?: PayoutSubstatus;
   payoutReference?: string | null;
+  notificationStatus?: NotificationStatus;
+  notificationSentAt?: Date | null;
   lastIssue?: Issue | null;
   receipt?: Json | null;
 }
@@ -75,6 +78,8 @@ const PATCH_COLUMNS: Record<keyof TransferPatch, { column: string; json?: true }
   settlementVerifiedAt: { column: "settlement_verified_at" },
   payoutStatus: { column: "payout_status" },
   payoutReference: { column: "payout_reference" },
+  notificationStatus: { column: "notification_status" },
+  notificationSentAt: { column: "notification_sent_at" },
   lastIssue: { column: "last_issue", json: true },
   receipt: { column: "receipt", json: true },
 };

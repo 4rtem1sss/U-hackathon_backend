@@ -39,6 +39,7 @@ import {
   type SettlementResult,
 } from "@/settlement";
 import { dbFenceGuard } from "@/settlement/db-fence-guard";
+import { getNotifier, type Notifier } from "@/notifications/ntfy";
 import { getPayoutSimulator, payoutReference, type PayoutSimulator } from "@/simulators/payout";
 import { rowToRecord } from "./mapping";
 import { loadSnapshotById, persistPatch, persistTransition, snapshotOfRow } from "./snapshots";
@@ -72,6 +73,8 @@ export interface AdvanceDeps extends ServiceDeps {
   settlement?: SettlementModule;
   /** Default: the process-wide payout simulator. */
   payoutSimulator?: PayoutSimulator;
+  /** Default: the process-wide ntfy notifier from env. */
+  notifier?: Notifier;
   /** Default: `getEnv()`. */
   settlementConfig?: SettlementIntentConfig;
   /** Default: 20 s. */
@@ -252,7 +255,12 @@ function stepPayout(ctx: StepContext): Promise<TransferRow | null> {
         ? planTransition(
             current,
             "COMPLETED_SIMULATED",
-            { payout: { status: "PAID", reference: sim.reference }, receipt: buildReceipt(now), lastIssue: null },
+            {
+              payout: { status: "PAID", reference: sim.reference },
+              receipt: buildReceipt(now),
+              lastIssue: null,
+              notification: { status: notifierFor(ctx).enabled ? "PENDING" : "DISABLED" },
+            },
             "PAYOUT_PAID",
             now,
           )
@@ -264,6 +272,38 @@ function stepPayout(ctx: StepContext): Promise<TransferRow | null> {
             now,
           );
     return requireRow(await persistTransition(client, current, planned, opts));
+  });
+}
+
+function notifierFor(ctx: StepContext): Notifier {
+  return ctx.deps.notifier ?? getNotifier();
+}
+
+/** Notification still owed: PENDING (just completed, or a crash mid-send) or FAILED (retry on a later call). */
+function notificationOwed(row: Pick<TransferRow, "status" | "notificationStatus">): boolean {
+  return row.status === "COMPLETED_SIMULATED" && (row.notificationStatus === "PENDING" || row.notificationStatus === "FAILED");
+}
+
+/**
+ * COMPLETED_SIMULATED with a notification owed: one bounded ntfy POST outside
+ * any DB transaction, then record SENT/FAILED under the fence. Best effort and
+ * at-least-once: a crash after the push but before the write re-sends later.
+ * Never changes the transfer status or nextAction.
+ */
+async function deliverNotification(ctx: StepContext, record: TransferRecord): Promise<void> {
+  const notifier = notifierFor(ctx);
+  if (!notifier.enabled) return;
+  const outcome = await notifier.notifyCompleted(record);
+  await fencedTx(ctx, "COMPLETED_SIMULATED", async (client, current, now) => {
+    const status = current.notification.status;
+    if (status !== "PENDING" && status !== "FAILED") return null;
+    if (outcome === "FAILED" && status === "FAILED") return null;
+    const next = planPatch(
+      current,
+      { notification: outcome === "SENT" ? { status: "SENT", sentAt: now } : { status: "FAILED", sentAt: null } },
+      now,
+    );
+    return requireRow(await persistPatch(client, current, next, { expectedEpoch: ctx.fence.epoch }));
   });
 }
 
@@ -281,8 +321,13 @@ async function runStep(ctx: StepContext, row: TransferRow): Promise<void> {
     case "SETTLED":
       await startPayout(ctx);
       return;
-    case "PAYOUT_PENDING":
-      await stepPayout(ctx);
+    case "PAYOUT_PENDING": {
+      const done = await stepPayout(ctx);
+      if (done && notificationOwed(done)) await deliverNotification(ctx, rowToRecord(done));
+      return;
+    }
+    case "COMPLETED_SIMULATED":
+      if (notificationOwed(row)) await deliverNotification(ctx, rowToRecord(row));
       return;
     default:
       return;
@@ -311,7 +356,7 @@ export async function advanceTransfer(
 
   const row = await getTransferForOwner(db, ownerId, transferId);
   if (!row) throw ApiError.notFound();
-  if (!ACTIONABLE.has(row.status)) {
+  if (!ACTIONABLE.has(row.status) && !notificationOwed(row)) {
     return { status: 200, replayed: false, snapshot: await snapshotOfRow(db, row) };
   }
 

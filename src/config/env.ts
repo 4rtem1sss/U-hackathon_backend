@@ -43,6 +43,15 @@ export const envSchema = z.object({
   INTERNAL_RPC_SECRET: optionalNonEmpty.pipe(z.string().min(32, "must be at least 32 characters").optional()),
   /** Which SettlementModule to use: in-memory fake (tests/dev) or part 4's real Fuji module. */
   SETTLEMENT_MODULE: optionalNonEmpty.pipe(z.enum(["fake", "fuji"]).optional()),
+  /** ntfy server for recipient push notifications. */
+  NTFY_BASE_URL: z.url().default("https://ntfy.sh"),
+  /** ntfy topic the recipient subscribes to. Unset = notifications DISABLED. Topic names are public on ntfy.sh, so use a hard-to-guess one. */
+  NTFY_TOPIC: optionalNonEmpty.pipe(
+    z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, "must be 1-64 letters, digits, _ or -").optional(),
+  ),
+  /** Optional ntfy access token (Bearer) for protected topics. */
+  NTFY_TOKEN: optionalNonEmpty,
+  NTFY_TIMEOUT_MS: positiveIntFromString(3000),
   QUOTE_TTL_SECONDS: positiveIntFromString(300),
   SETTLEMENT_CONFIRMATIONS: positiveIntFromString(2),
   ALLOWED_ORIGINS: z

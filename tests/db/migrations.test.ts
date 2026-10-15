@@ -3,6 +3,8 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 import { runMigrations } from "../../scripts/migrate.mjs";
 import { createEmptyDb, describeDb } from "./helpers";
 
+const MIGRATIONS = ["0001_init.sql", "0002_notification.sql"];
+
 const TABLES = [
   "demo_sessions",
   "recipients",
@@ -28,7 +30,7 @@ describeDb("migrations", () => {
 
   it("apply on a clean database, then are a no-op on re-run (also when run concurrently)", async () => {
     const first = await runMigrations({ connectionString: db.url });
-    expect(first).toEqual(["0001_init.sql"]);
+    expect(first).toEqual(MIGRATIONS);
 
     const again = await runMigrations({ connectionString: db.url });
     expect(again).toEqual([]);
@@ -55,7 +57,7 @@ describeDb("migrations", () => {
       expect(policies.rowCount).toBe(0);
 
       const { rows: mig } = await c.query("SELECT name FROM schema_migrations");
-      expect(mig.map((r) => r.name)).toEqual(["0001_init.sql"]);
+      expect(mig.map((r) => r.name).sort()).toEqual(MIGRATIONS);
     } finally {
       await c.end();
     }
@@ -76,6 +78,6 @@ describeDb("migrations: concurrent first run", () => {
       runMigrations({ connectionString: db.url }),
       runMigrations({ connectionString: db.url }),
     ]);
-    expect(results.flat()).toEqual(["0001_init.sql"]);
+    expect(results.flat().sort()).toEqual(MIGRATIONS);
   });
 });

@@ -3,6 +3,8 @@ import type {
   DemoScenario,
   FundingSubstatus,
   NextAction,
+  NotificationChannel,
+  NotificationStatus,
   PayoutSubstatus,
   Purpose,
   SettlementSubstatus,
@@ -46,6 +48,8 @@ export interface TransferSnapshot {
     verifiedAt: string | null;
   };
   payout: { mode: "SIMULATED"; status: PayoutSubstatus; reference: string | null };
+  /** Recipient push notification, sent by the server once the transfer completes. */
+  notification: { channel: NotificationChannel; status: NotificationStatus; sentAt: string | null };
   events: { sequence: number; status: TransferStatus; createdAt: string }[];
   lastIssue: Issue | null;
   nextAction: NextAction;
@@ -117,6 +121,11 @@ export function toSnapshot(record: TransferRecord, events: readonly TransferEven
       verifiedAt: settlement.verifiedAt === null ? null : settlement.verifiedAt.toISOString(),
     },
     payout: { mode: "SIMULATED", status: record.payout.status, reference: record.payout.reference },
+    notification: {
+      channel: record.notification.channel,
+      status: record.notification.status,
+      sentAt: record.notification.sentAt === null ? null : record.notification.sentAt.toISOString(),
+    },
     events: [...events]
       .sort((a, b) => a.sequence - b.sequence)
       .map((e) => ({ sequence: e.sequence, status: e.toStatus, createdAt: e.createdAt.toISOString() })),

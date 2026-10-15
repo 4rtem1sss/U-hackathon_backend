@@ -31,6 +31,8 @@ export type SettlementSubstatus =
   | "FAILED"
   | "REVIEW_REQUIRED";
 export type PayoutSubstatus = "NOT_STARTED" | "PENDING" | "PAID" | "FAILED" | "UNKNOWN";
+export type NotificationChannel = "NTFY";
+export type NotificationStatus = "NOT_STARTED" | "PENDING" | "SENT" | "FAILED" | "DISABLED";
 export type QuoteStatus = "OPEN" | "ACCEPTED" | "EXPIRED";
 export type DemoScenario = "HAPPY_PATH" | "FUNDING_DECLINED" | "PAYOUT_FAILED";
 export type Purpose = "PERSONAL_REMITTANCE";
@@ -111,6 +113,9 @@ export interface TransferRow extends AmountFields {
   settlementVerifiedAt: Date | null;
   payoutStatus: PayoutSubstatus;
   payoutReference: string | null;
+  notificationChannel: NotificationChannel;
+  notificationStatus: NotificationStatus;
+  notificationSentAt: Date | null;
   lastIssue: Issue | null;
   receipt: Json | null;
   claimEpoch: number;

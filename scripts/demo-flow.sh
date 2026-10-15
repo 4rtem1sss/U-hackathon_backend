@@ -14,7 +14,7 @@ api() { # method path [idempotency-key]
   if [[ "$1" == POST ]]; then args+=(--data "${BODY:-{\}}"); fi
   curl "${args[@]}"
 }
-show() { node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);if(j.error){console.log("ERROR",JSON.stringify(j.error));process.exit(1)}const d=j.data;console.log(`${d.status.padEnd(20)} v${d.version}  next=${d.nextAction}  settlement=${d.settlement.status}${d.settlement.txHash?" "+d.settlement.txHash.slice(0,12)+"…":""}  payout=${d.payout.status}`);process.stdout.write(d.id+"\t"+d.nextAction+"\n",()=>{})})'; }
+show() { node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);if(j.error){console.log("ERROR",JSON.stringify(j.error));process.exit(1)}const d=j.data;console.log(`${d.status.padEnd(20)} v${d.version}  next=${d.nextAction}  settlement=${d.settlement.status}${d.settlement.txHash?" "+d.settlement.txHash.slice(0,12)+"…":""}  payout=${d.payout.status}  notify=${d.notification.status}`);process.stdout.write(d.id+"\t"+d.nextAction+"\n",()=>{})})'; }
 
 echo "== create transfer ($SCENARIO)"
 OUT=$(BODY="{\"quoteId\":\"$DEMO_QUOTE_ID\",\"purpose\":\"PERSONAL_REMITTANCE\",\"demoScenario\":\"$SCENARIO\"}" api POST /api/transfers "$(node -e 'console.log(crypto.randomUUID())')" | show)
