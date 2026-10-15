@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   FakeSettlementModule,
+  FujiSettlementModule,
   InMemoryFenceGuard,
-  SettlementModuleNotWiredError,
   getSettlementModule,
   registerFenceGuard,
   resetSettlementModuleForTests,
@@ -47,9 +47,15 @@ describe("getSettlementModule()", () => {
     expect(() => getSettlementModule({ env: {} })).toThrow(/FenceGuard/);
   });
 
-  it("fuji is not wired yet", () => {
-    expect(() =>
-      getSettlementModule({ fenceGuard: new InMemoryFenceGuard(), env: { SETTLEMENT_MODULE: "fuji" } }),
-    ).toThrow(SettlementModuleNotWiredError);
+  it("wires the persisted Fuji implementation", () => {
+    const settlement = getSettlementModule({
+      fenceGuard: new InMemoryFenceGuard(),
+      env: {
+        SETTLEMENT_MODULE: "fuji",
+        SETTLEMENT_PRIVATE_KEY: `0x${"0".repeat(63)}1`,
+        DESTINATION_SETTLEMENT_ADDRESS: "0x000000000000000000000000000000000000dEaD",
+      },
+    });
+    expect(settlement).toBeInstanceOf(FujiSettlementModule);
   });
 });

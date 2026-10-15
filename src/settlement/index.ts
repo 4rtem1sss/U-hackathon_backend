@@ -5,10 +5,9 @@
  * - Unset: `fake` when APP_MODE is development/test (or unset); an error in
  *   demo/production, where the choice must be explicit.
  * - `fake`: {@link FakeSettlementModule} (no chain transfer happens).
- * - `fuji`: part 4's module. Not wired yet: throws {@link SettlementModuleNotWiredError}.
+ * - `fuji`: persisted Avalanche Fuji Test USDC module.
  *
- * NOTE: reads process.env directly; `SETTLEMENT_MODULE` should be added to
- * src/config/env.ts by the integrator.
+ * NOTE: reads the existing server-only environment names from src/config/env.ts.
  *
  * The module is created once per process (the fake keeps its state in
  * memory). The {@link FenceGuard} comes from part 3's DB layer: pass it on the
@@ -16,6 +15,10 @@
  */
 import type { FenceGuard, SettlementModule } from "./contract";
 import { FakeSettlementModule } from "./fake";
+import { FujiSettlementModule } from "./fuji/module";
+import { PgFujiAttemptStore } from "./fuji/store";
+import { ViemFujiGateway } from "./fuji/gateway";
+import { parseFujiConfig } from "./fuji/config";
 
 export * from "./contract";
 export { buildSettlementIntent, assertValidIntent, type SettlementIntentConfig, type SettlementIntentSource } from "./intent";
@@ -28,15 +31,9 @@ export {
   type FakeScenario,
   type FakeTransferStats,
 } from "./fake";
+export { FujiSettlementModule } from "./fuji/module";
 
 export type SettlementModuleKind = "fake" | "fuji";
-
-export class SettlementModuleNotWiredError extends Error {
-  constructor() {
-    super("SETTLEMENT_MODULE=fuji: part 4 module not wired yet (src/settlement/index.ts).");
-    this.name = "SettlementModuleNotWiredError";
-  }
-}
 
 type EnvLike = Record<string, string | undefined>;
 
@@ -78,7 +75,14 @@ export function getSettlementModule(options: GetSettlementModuleOptions = {}): S
   if (kind === "fake") {
     settlement = new FakeSettlementModule({ fenceGuard, env });
   } else {
-    throw new SettlementModuleNotWiredError();
+    const config = parseFujiConfig(env);
+    settlement = new FujiSettlementModule({
+      fenceGuard,
+      store: new PgFujiAttemptStore(),
+      gateway: new ViemFujiGateway(config),
+      tokenAddress: config.tokenAddress,
+      destination: config.destination,
+    });
   }
   cached = { kind, module: settlement };
   return settlement;
