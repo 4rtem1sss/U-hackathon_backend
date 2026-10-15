@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { ntfyNotifier } from "../notify";
 import { browserStorage } from "../storage";
@@ -9,12 +9,14 @@ import { createRoutedClient, endpointWarnings, parseRealEndpoints, type Endpoint
 import { createMockClient } from "./mock";
 import { createRealClient } from "./real";
 
-type ApiContextValue = { api: ApiClient; modes: EndpointModes; resetMock(): void };
+/** `resetCount` goes up on every mock reset so mounted pages can reload what the reset dropped. */
+type ApiContextValue = { api: ApiClient; modes: EndpointModes; resetMock(): void; resetCount: number };
 
 const ApiContext = createContext<ApiContextValue | null>(null);
 
 export function ApiProvider({ children }: { children: ReactNode }) {
-  const [value] = useState<ApiContextValue>(() => {
+  const [resetCount, setResetCount] = useState(0);
+  const [base] = useState<Omit<ApiContextValue, "resetCount">>(() => {
     const modes = parseRealEndpoints(process.env.NEXT_PUBLIC_REAL_ENDPOINTS);
     for (const w of endpointWarnings(modes)) console.warn(`[CentMe] NEXT_PUBLIC_REAL_ENDPOINTS: ${w}`);
     const mock = createMockClient({
@@ -28,14 +30,22 @@ export function ApiProvider({ children }: { children: ReactNode }) {
         if (process.env.NODE_ENV !== "production") toast.error(`${endpoint}: ${issues[0] ?? "schema mismatch"}`);
       },
     });
-    return { api: createRoutedClient(modes, real, mock), modes, resetMock: () => mock.reset() };
+    return {
+      api: createRoutedClient(modes, real, mock),
+      modes,
+      resetMock: () => {
+        mock.reset();
+        setResetCount((n) => n + 1);
+      },
+    };
   });
+  const value = useMemo(() => ({ ...base, resetCount }), [base, resetCount]);
 
   useEffect(() => {
-    value.api.createSession().catch(() => {
+    base.api.createSession().catch(() => {
       // 401 handling in the real client re-creates the session on the next call
     });
-  }, [value]);
+  }, [base]);
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
 }

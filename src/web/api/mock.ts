@@ -36,9 +36,12 @@ export type MockClient = ApiClient & QuoteMemory & { reset(): void };
 
 const emptyState = (): MockState => ({ counter: 0, recipients: [], quotes: {}, transfers: {}, keys: {} });
 
+function randomHex(bytes: number): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(bytes)), (x) => x.toString(16).padStart(2, "0")).join("");
+}
+
 function mockHash(): string {
-  const b = crypto.getRandomValues(new Uint8Array(32));
-  return "mock-0x" + Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  return "mock-0x" + randomHex(32);
 }
 
 export function createMockClient(
@@ -122,7 +125,8 @@ export function createMockClient(
         throw fail(409, "RECIPIENT_LIMIT", "This demo session already has the maximum number of recipients.");
       }
       const r: Recipient = {
-        id: nextId("rcp_mock"),
+        // Random, not the counter: reset restarts the counter, and a reused id would match a stale stored selection.
+        id: `rcp_mock_${randomHex(8)}`,
         name: parsed.data.name,
         country: "TH",
         currency: "THB",

@@ -22,7 +22,7 @@ import { browserStorage } from "@/web/storage";
 const AMOUNT_KEY = "centme:amount";
 
 export default function SendPage() {
-  const { api } = useApi();
+  const { api, resetCount } = useApi();
   const { t } = useT();
   const [step, setStep] = useState<1 | 2>(1);
   const [amount, setAmount] = useState("10.00");
@@ -46,7 +46,8 @@ export default function SendPage() {
     api.getRecipients()
       .then((list) => setRecipient(pickRecipient(list, browserStorage("session").getItem(RECIPIENT_KEY))))
       .catch(() => setRecipientFailed(true));
-  }, [api]);
+    // resetCount: a presenter Reset drops mock recipients, so the selection must be re-picked.
+  }, [api, resetCount]);
 
   const parsed = parseUsdInput(amount);
   const estimate = parsed.ok ? estimateQuote(parsed.minor) : null;

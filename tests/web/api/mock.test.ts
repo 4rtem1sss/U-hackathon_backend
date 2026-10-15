@@ -162,6 +162,16 @@ describe("mock backend", () => {
     expect(t.recipient).toMatchObject({ id: r.id, name: "Nong Fon", bankLabel: "Krungthai", accountDisplay: "••3210" });
   });
 
+  it("never reuses a recipient id after reset", async () => {
+    const api = createMockClient();
+    const input = { name: "A", bankCode: "SCB" as const, accountNumber: "1234567890" };
+    const before = await api.createRecipient(input);
+    api.reset();
+    const after = await api.createRecipient(input);
+    expect(after.id).not.toBe(before.id);
+    expect(after.id).toMatch(/^rcp_mock_/);
+  });
+
   it("forgets created recipients on reset", async () => {
     const api = createMockClient();
     await api.createRecipient({ name: "A", bankCode: "SCB", accountNumber: "1234567890" });
