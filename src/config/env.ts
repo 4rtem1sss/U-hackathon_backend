@@ -53,7 +53,7 @@ export const envSchema = z.object({
   NTFY_TOKEN: optionalNonEmpty,
   NTFY_TIMEOUT_MS: positiveIntFromString(3000),
   QUOTE_TTL_SECONDS: positiveIntFromString(300),
-  SETTLEMENT_CONFIRMATIONS: positiveIntFromString(2),
+  SETTLEMENT_CONFIRMATIONS: z.coerce.number().int().min(1).max(64).default(2),
   ALLOWED_ORIGINS: z
     .string()
     .default("")

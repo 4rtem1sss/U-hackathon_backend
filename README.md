@@ -64,7 +64,8 @@ prefix for any of them.
 | `AVALANCHE_RPC_URL` | no | `https://api.avax-test.network/ext/bc/C/rpc` | Used only by part 4's module |
 | `USDC_TOKEN_ADDRESS` | no | `0x5425890298aed601595a70AB815c96711a31Bc65` | Fuji test USDC |
 | `DESTINATION_SETTLEMENT_ADDRESS` | yes | – | Allowlisted settlement destination (server config only) |
-| `SETTLEMENT_PRIVATE_KEY` | no | – | Part 4's signer key (`0x` + 64 hex). Secret |
+| `SETTLEMENT_PRIVATE_KEY` | with `SETTLEMENT_MODULE=fuji` | – | Dedicated Fuji test-only signer key (`0x` + 64 hex). Secret |
+| `SETTLEMENT_MODULE` | explicit in demo/production | fake in dev/test | `fake` or persisted `fuji` implementation |
 | `INTERNAL_RPC_SECRET` | no | – | Bearer secret if part 4 runs as a separate service (≥ 32 chars). Secret |
 | `QUOTE_TTL_SECONDS` | no | `300` | Quote validity |
 | `SETTLEMENT_CONFIRMATIONS` | no | `2` | Confirmations before a receipt counts as verified |
@@ -90,7 +91,7 @@ src/
     money.ts              strict unsigned integer amount strings <-> bigint
   domain/                 state machine, snapshot, simulators (T3, T5, T8)
   db/                     pg pool, transactions, repositories (T2)
-  settlement/             part 3 <-> part 4 contract, fake module (T6)
+  settlement/             frozen contract, fake module, persisted Fuji module
 db/migrations/            plain SQL migrations (T2)
 tests/                    vitest tests (unit/, later contract/ and db/)
 scripts/test-db.sh        throwaway local Postgres 16
