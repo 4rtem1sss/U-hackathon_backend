@@ -8,3 +8,5 @@ export * from "./funding";
 export * from "./advance";
 export * from "./payout";
 export * from "./http";
+export * from "./recipients";
+export * from "./quotes";
