@@ -11,7 +11,7 @@ const QUOTE_TTL_MS = 300_000;
 const TOKEN_ADDRESS = "0x5425890298aed601595a70AB815c96711a31Bc65";
 
 export const MOCK_RECIPIENT: Recipient = {
-  id: "recipient_demo_th_001",
+  id: "rcp_mock_th_001", // real ids are opaque rcp_<uuid>; the UI must use whatever getRecipients returns
   name: "Demo Recipient",
   country: "TH",
   currency: "THB",

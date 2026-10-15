@@ -1,13 +1,13 @@
+import { computeAmounts, FIXTURE_US_TH_V1, parseSourceDebitMinor } from "@/domain/pricing";
 import { LOCALE, type Lang } from "./lang";
 
-/** Mirrors the contract's fixture-us-th-v1. Estimates only; the server quote is authoritative. */
+/** Same fixture-us-th-v1 the server prices with. Estimates only; the server quote is authoritative. */
 export const FIXTURE = {
-  version: "fixture-us-th-v1",
-  feeBps: 200n,
-  rateNumerator: 35n,
-  rateDenominator: 1n,
-  minDebitMinor: 100n,
-  maxDebitMinor: 10000n,
+  version: FIXTURE_US_TH_V1.version,
+  rateNumerator: FIXTURE_US_TH_V1.fxRateNumerator,
+  rateDenominator: FIXTURE_US_TH_V1.fxRateDenominator,
+  minDebitMinor: FIXTURE_US_TH_V1.minDebitMinor,
+  maxDebitMinor: FIXTURE_US_TH_V1.maxDebitMinor,
 } as const;
 
 export type ParseError = "EMPTY" | "FORMAT" | "TOO_SMALL" | "TOO_LARGE";
@@ -33,17 +33,15 @@ export type Estimate = {
 };
 
 export function estimateQuote(debitMinor: string): Estimate {
-  const debit = BigInt(debitMinor);
-  const fee = (debit * FIXTURE.feeBps + 9999n) / 10000n; // ceil to a whole cent
-  const principal = debit - fee;
-  // THB satang = floor(principal × num × 10^2 / (den × 10^2))
-  const thb = (principal * FIXTURE.rateNumerator * 100n) / (FIXTURE.rateDenominator * 100n);
+  const parsed = parseSourceDebitMinor(debitMinor, FIXTURE_US_TH_V1);
+  if (!parsed.ok) throw new RangeError(`estimateQuote: ${parsed.error}`);
+  const a = computeAmounts(parsed.value, FIXTURE_US_TH_V1);
   return {
-    sourceDebitMinor: debit.toString(),
-    feeMinor: fee.toString(),
-    conversionPrincipalMinor: principal.toString(),
-    destinationNetMinor: thb.toString(),
-    settlementTokenUnits: (principal * 10000n).toString(),
+    sourceDebitMinor: a.sourceDebitMinor.toString(),
+    feeMinor: a.feeMinor.toString(),
+    conversionPrincipalMinor: a.conversionPrincipalMinor.toString(),
+    destinationNetMinor: a.destinationNetMinor.toString(),
+    settlementTokenUnits: a.settlementTokenUnits.toString(),
   };
 }
 

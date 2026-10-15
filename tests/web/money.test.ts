@@ -24,8 +24,9 @@ describe("estimateQuote", () => {
       destinationNetMinor: "34300", settlementTokenUnits: "9800000",
     });
   });
-  it("rounds the 2% fee up to a whole cent", () => {
+  it("rounds the 2% fee up to a whole cent (person 2's check values)", () => {
     expect(estimateQuote("101").feeMinor).toBe("3");
+    expect(estimateQuote("151").feeMinor).toBe("4");
   });
   it("handles both bounds", () => {
     expect(estimateQuote("100")).toMatchObject({ feeMinor: "2", destinationNetMinor: "3430" });
