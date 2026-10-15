@@ -2,7 +2,7 @@ import type { z } from "zod";
 import type { ApiClient } from "./client";
 import { markDrifted } from "./drift";
 import { ApiError, NetworkError } from "./errors";
-import { envelope, ErrorEnvelopeSchema, QuoteSchema, RecipientsSchema, SessionSchema, TransferSnapshotSchema, type Session } from "./types";
+import { envelope, ErrorEnvelopeSchema, QuoteSchema, RecipientSchema, RecipientsSchema, SessionSchema, TransferSnapshotSchema, type Session } from "./types";
 
 const SESSION_PATH = "/api/demo/session";
 
@@ -80,6 +80,7 @@ export function createRealClient(
   return {
     createSession: () => ensureSession(),
     getRecipients: async () => (await request("GET", "/api/recipients", RecipientsSchema)).recipients,
+    createRecipient: (input) => request("POST", "/api/recipients", RecipientSchema, input),
     createQuote: (input) => request("POST", "/api/quotes", QuoteSchema, input),
     createTransfer: (input, key) => request("POST", "/api/transfers", TransferSnapshotSchema, input, key),
     getTransfer: (id) => request("GET", `/api/transfers/${t(id)}`, TransferSnapshotSchema),

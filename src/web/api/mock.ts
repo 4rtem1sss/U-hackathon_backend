@@ -1,3 +1,4 @@
+import { accountDisplayFromNumber, bankLabel, newRecipientBody, RECIPIENT_LIMIT } from "@/domain/recipients";
 import { estimateQuote, FIXTURE } from "../money";
 import type { NotifyResult, Notifier } from "../notify";
 import { memoryStore, type KeyValueStore } from "../storage";
@@ -25,6 +26,7 @@ type KeyRecord = { fingerprint: string; transferId: string };
 type TransferRecord = { snapshot: TransferSnapshot; payoutAttempts: number };
 type MockState = {
   counter: number;
+  recipients: Recipient[];
   quotes: Record<string, QuoteRecord>;
   transfers: Record<string, TransferRecord>;
   keys: Record<string, KeyRecord>;
@@ -32,7 +34,7 @@ type MockState = {
 
 export type MockClient = ApiClient & QuoteMemory & { reset(): void };
 
-const emptyState = (): MockState => ({ counter: 0, quotes: {}, transfers: {}, keys: {} });
+const emptyState = (): MockState => ({ counter: 0, recipients: [], quotes: {}, transfers: {}, keys: {} });
 
 function mockHash(): string {
   const b = crypto.getRandomValues(new Uint8Array(32));
@@ -50,7 +52,7 @@ export function createMockClient(
   let state: MockState = (() => {
     try {
       const raw = storage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw) as MockState;
+      if (raw) return { ...emptyState(), ...(JSON.parse(raw) as Partial<MockState>) };
     } catch {
       // corrupt mock data: start fresh
     }
@@ -69,6 +71,9 @@ export function createMockClient(
     if (!r) throw fail(404, "NOT_FOUND", "Transfer not found.");
     return r;
   }
+
+  const allRecipients = (): Recipient[] => [MOCK_RECIPIENT, ...state.recipients];
+  const findRecipient = (id: string) => allRecipients().find((r) => r.id === id) ?? null;
 
   function transition(r: TransferRecord, status: TransferStatus, patch: Partial<TransferSnapshot>) {
     const s = r.snapshot;
@@ -103,11 +108,35 @@ export function createMockClient(
     },
 
     async getRecipients() {
-      return [clone(MOCK_RECIPIENT)];
+      return clone(allRecipients());
+    },
+
+    async createRecipient(input) {
+      const parsed = newRecipientBody.safeParse(input);
+      if (!parsed.success) {
+        const fieldErrors: Record<string, string> = {};
+        for (const issue of parsed.error.issues) fieldErrors[String(issue.path[0] ?? "_")] ??= issue.message;
+        throw fail(400, "INVALID_INPUT", "The request input is invalid.", fieldErrors);
+      }
+      if (allRecipients().length >= RECIPIENT_LIMIT) {
+        throw fail(409, "RECIPIENT_LIMIT", "This demo session already has the maximum number of recipients.");
+      }
+      const r: Recipient = {
+        id: nextId("rcp_mock"),
+        name: parsed.data.name,
+        country: "TH",
+        currency: "THB",
+        bankLabel: bankLabel(parsed.data.bankCode),
+        accountDisplay: accountDisplayFromNumber(parsed.data.accountNumber),
+        isSynthetic: true,
+      };
+      state.recipients.push(r);
+      save();
+      return clone(r);
     },
 
     async createQuote({ recipientId, sourceDebitMinor, demoCheckScenario }) {
-      if (recipientId !== MOCK_RECIPIENT.id) throw fail(404, "NOT_FOUND", "Recipient not found.");
+      if (!findRecipient(recipientId)) throw fail(404, "NOT_FOUND", "Recipient not found.");
       if (!/^[1-9]\d*$/.test(sourceDebitMinor)) {
         throw fail(400, "INVALID_INPUT", "Invalid amount.", { sourceDebitMinor: "Use whole cents." });
       }
@@ -171,13 +200,11 @@ export function createMockClient(
         mode: "DEMO",
         purpose: input.purpose,
         demoScenario: input.demoScenario,
-        recipient: {
-          id: MOCK_RECIPIENT.id,
-          name: MOCK_RECIPIENT.name,
-          bankLabel: MOCK_RECIPIENT.bankLabel,
-          accountDisplay: MOCK_RECIPIENT.accountDisplay,
-          isSynthetic: true,
-        },
+        recipient: (() => {
+          // A quote from the real backend (mixed modes) has a recipient the mock never saw.
+          const r = findRecipient(q.quote.recipientId) ?? MOCK_RECIPIENT;
+          return { id: r.id, name: r.name, bankLabel: r.bankLabel, accountDisplay: r.accountDisplay, isSynthetic: true };
+        })(),
         amounts: {
           sourceCurrency: "USD",
           destinationCurrency: "THB",

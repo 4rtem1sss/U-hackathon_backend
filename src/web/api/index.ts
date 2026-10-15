@@ -23,6 +23,7 @@ export function createRoutedClient(modes: EndpointModes, real: ApiClient, mock: 
   return {
     createSession: () => pick("session").createSession(),
     getRecipients: () => pick("recipients").getRecipients(),
+    createRecipient: (input) => pick("recipients").createRecipient(input),
     createQuote: async (input) => {
       const quote = await pick("quotes").createQuote(input);
       mock.rememberQuote(quote);

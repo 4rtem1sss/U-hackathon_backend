@@ -131,4 +131,41 @@ describe("mock backend", () => {
     const gone = await createMockClient({ storage }).getTransfer(created.id).catch((e) => e);
     expect(gone.code).toBe("NOT_FOUND");
   });
+
+  it("creates recipients with last-4 display and lists them after the seeded one", async () => {
+    const api = createMockClient();
+    const r = await api.createRecipient({ name: " Somchai ", bankCode: "SCB", accountNumber: "123-4-56789-0" });
+    expect(r).toMatchObject({ name: "Somchai", bankLabel: "SCB", accountDisplay: "••7890", isSynthetic: true });
+    expect((await api.getRecipients()).map((x) => x.id)).toEqual([MOCK_RECIPIENT.id, r.id]);
+  });
+
+  it("rejects invalid recipient input with per-field errors", async () => {
+    const api = createMockClient();
+    const e = await api.createRecipient({ name: "", bankCode: "SCB", accountNumber: "12" }).catch((x) => x);
+    expect(e).toBeInstanceOf(ApiError);
+    expect(e.code).toBe("INVALID_INPUT");
+    expect(Object.keys(e.fieldErrors).sort()).toEqual(["accountNumber", "name"]);
+  });
+
+  it("caps recipients at the limit", async () => {
+    const api = createMockClient();
+    for (let i = 0; i < 9; i++) await api.createRecipient({ name: "A", bankCode: "SCB", accountNumber: "1234567890" });
+    const e = await api.createRecipient({ name: "A", bankCode: "SCB", accountNumber: "1234567890" }).catch((x) => x);
+    expect(e.code).toBe("RECIPIENT_LIMIT");
+  });
+
+  it("puts the quoted recipient on the transfer snapshot", async () => {
+    const api = createMockClient();
+    const r = await api.createRecipient({ name: "Nong Fon", bankCode: "KTB", accountNumber: "9876543210" });
+    const quote = await api.createQuote({ recipientId: r.id, sourceDebitMinor: "1000" });
+    const t = await api.createTransfer({ quoteId: quote.id, purpose: "PERSONAL_REMITTANCE", demoScenario: "HAPPY_PATH" }, "k-r");
+    expect(t.recipient).toMatchObject({ id: r.id, name: "Nong Fon", bankLabel: "Krungthai", accountDisplay: "••3210" });
+  });
+
+  it("forgets created recipients on reset", async () => {
+    const api = createMockClient();
+    await api.createRecipient({ name: "A", bankCode: "SCB", accountNumber: "1234567890" });
+    api.reset();
+    expect(await api.getRecipients()).toHaveLength(1);
+  });
 });

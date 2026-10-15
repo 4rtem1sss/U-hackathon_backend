@@ -20,6 +20,20 @@ describe("real client", () => {
     expect(init.credentials).toBe("same-origin");
   });
 
+  it("posts a new recipient and unwraps data", async () => {
+    const recipient = { id: "rcp_1", name: "Somchai", country: "TH", currency: "THB", bankLabel: "SCB", accountDisplay: "••7890", isSynthetic: true };
+    const fetchImpl = vi.fn().mockResolvedValue(json(201, { data: recipient, meta }));
+    const onSchemaMismatch = vi.fn();
+    const api = createRealClient({ fetchImpl, onSchemaMismatch });
+    const input = { name: "Somchai", bankCode: "SCB" as const, accountNumber: "123-4-56789-0" };
+    expect(await api.createRecipient(input)).toEqual(recipient);
+    const [path, init] = fetchImpl.mock.calls[0]!;
+    expect(path).toBe("/api/recipients");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual(input);
+    expect(onSchemaMismatch).not.toHaveBeenCalled();
+  });
+
   it("sends the Idempotency-Key on transfer creation", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(json(201, { data: contractSnapshotExample, meta }));
     const api = createRealClient({ fetchImpl });

@@ -6,7 +6,7 @@ import { createRoutedClient, parseRealEndpoints } from "@/web/api/index";
 function stubClient(name: string): ApiClient {
   const fn = () => vi.fn().mockResolvedValue(name);
   return {
-    createSession: fn(), getRecipients: fn(), createQuote: vi.fn().mockResolvedValue(contractQuoteExample),
+    createSession: fn(), getRecipients: fn(), createRecipient: fn(), createQuote: vi.fn().mockResolvedValue(contractQuoteExample),
     createTransfer: fn(), getTransfer: fn(), simulateFunding: fn(), advance: fn(), retryPayout: fn(),
   } as unknown as ApiClient;
 }
@@ -26,6 +26,16 @@ describe("endpoint routing", () => {
     expect(real.createQuote).toHaveBeenCalled();
     expect(mock.rememberQuote).toHaveBeenCalledWith(contractQuoteExample);
     expect(await api.getTransfer("t1")).toBe("mock");
+  });
+
+  it("routes createRecipient with the recipients group", async () => {
+    const input = { name: "A", bankCode: "SCB" as const, accountNumber: "1234567890" };
+    const real = stubClient("real");
+    const mock = { ...stubClient("mock"), rememberQuote: vi.fn() };
+    expect(await createRoutedClient(parseRealEndpoints("recipients"), real, mock).createRecipient(input)).toBe("real");
+    expect(real.createRecipient).toHaveBeenCalledWith(input);
+    expect(await createRoutedClient(parseRealEndpoints(""), real, mock).createRecipient(input)).toBe("mock");
+    expect(mock.createRecipient).toHaveBeenCalledWith(input);
   });
 });
 
