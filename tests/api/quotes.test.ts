@@ -1,7 +1,8 @@
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { POST as quotesPOST } from "@/app/api/quotes/route";
 import { insertRecipient } from "@/db/repos/recipients";
 import { newId } from "@/lib/ids";
+import { QUOTE_RATE_LIMIT } from "@/server/quotes";
 import { apiRequest, describeDb, newKey, readJson, seedSession, useApiTestDb, type TestSession } from "../server/helpers";
 import { create } from "./client";
 
@@ -171,6 +172,81 @@ describeDb("POST /api/quotes", () => {
       conversionPrincipalMinor: q.conversionPrincipalMinor,
       destinationNetMinor: q.destinationNetMinor,
       settlementTokenUnits: q.settlementTokenUnits,
+    });
+  });
+
+  describe("rate limit", () => {
+    const { max } = QUOTE_RATE_LIMIT;
+    const body = (recipientId: string, demoCheckScenario = "PASS") => ({ recipientId, sourceDebitMinor: "1000", demoCheckScenario });
+    const checkCount = async (ownerId: string) =>
+      Number((await t.db.pool.query("SELECT count(*)::int AS n FROM quote_checks WHERE owner_id = $1", [ownerId])).rows[0].n);
+    /** Fill the window directly in SQL (REJECT rows, so no quotes are created). */
+    const seedChecks = (ownerId: string, recipientId: string, n: number) =>
+      t.db.pool.query(
+        `INSERT INTO quote_checks (id, owner_id, recipient_id, source_debit_minor, scenario, result, fixture_version)
+         SELECT 'chk_seed_' || $1::text || '_' || g, $1, $2, 1000, 'REJECT', 'REJECT', 'fixture-us-th-v1'
+         FROM generate_series(1, $3::int) g`,
+        [ownerId, recipientId, n],
+      );
+
+    it("allows 20 quotes in a row, then 429 RATE_LIMITED with Retry-After and no extra check row", async () => {
+      const { session, recipient } = await seedWithRecipient();
+      for (let i = 0; i < max; i++) {
+        expect((await post(session, body(recipient.id))).status).toBe(201);
+      }
+      const res = await post(session, body(recipient.id));
+      expect(res.status).toBe(429);
+      const err = (await readJson(res)).error;
+      expect(err?.code).toBe("RATE_LIMITED");
+      expect(err?.retryable).toBe(true);
+      const retryAfter = res.headers.get("retry-after");
+      expect(retryAfter).toMatch(/^\d+$/);
+      expect(Number(retryAfter)).toBeGreaterThanOrEqual(1);
+      expect(Number(retryAfter)).toBeLessThanOrEqual(QUOTE_RATE_LIMIT.windowSeconds);
+      expect(await checkCount(session.ownerId)).toBe(max);
+      expect(await quoteCount(session.ownerId)).toBe(max);
+    });
+
+    it("counts REJECT and REVIEW attempts toward the limit", async () => {
+      const { session, recipient } = await seedWithRecipient();
+      for (let i = 0; i < max; i++) {
+        const res = await post(session, body(recipient.id, i % 2 === 0 ? "REJECT" : "REVIEW"));
+        expect(res.status).toBe(422);
+      }
+      const res = await post(session, body(recipient.id));
+      expect(res.status).toBe(429);
+      expect((await readJson(res)).error?.code).toBe("RATE_LIMITED");
+      expect(await checkCount(session.ownerId)).toBe(max);
+    });
+
+    it("does not limit another session while the first is limited", async () => {
+      const { session, recipient } = await seedWithRecipient();
+      await seedChecks(session.ownerId, recipient.id, max);
+      expect((await post(session, body(recipient.id))).status).toBe(429);
+
+      const other = await seedWithRecipient();
+      expect((await post(other.session, body(other.recipient.id))).status).toBe(201);
+    });
+
+    it("allows quotes again once the window has passed", async () => {
+      const { session, recipient } = await seedWithRecipient();
+      await seedChecks(session.ownerId, recipient.id, max);
+      expect((await post(session, body(recipient.id))).status).toBe(429);
+
+      await t.db.pool.query(
+        "UPDATE quote_checks SET created_at = created_at - interval '61 seconds' WHERE owner_id = $1",
+        [session.ownerId],
+      );
+      expect((await post(session, body(recipient.id))).status).toBe(201);
+    });
+
+    it("counts concurrent requests from one session exactly", async () => {
+      const { session, recipient } = await seedWithRecipient();
+      const responses = await Promise.all(Array.from({ length: 25 }, () => post(session, body(recipient.id))));
+      const statuses = responses.map((r) => r.status);
+      expect(statuses.filter((s) => s === 201)).toHaveLength(max);
+      expect(statuses.filter((s) => s === 429)).toHaveLength(25 - max);
+      expect(await checkCount(session.ownerId)).toBe(max);
     });
   });
 });

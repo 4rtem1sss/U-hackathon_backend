@@ -19,6 +19,9 @@ export type CreateQuoteBody = z.infer<typeof createQuoteBody>;
 
 const policy = FIXTURE_US_TH_V1;
 
+/** Per-session limit on quote check attempts; enforced in the database. */
+export const QUOTE_RATE_LIMIT = { max: 20, windowSeconds: 60 } as const;
+
 /**
  * Price a quote for the caller's recipient. The simulated check row is always
  * committed; only a PASS check yields a quote (REJECT/REVIEW throw afterwards).
@@ -33,6 +36,23 @@ export async function createQuote(input: { ownerId: string; body: CreateQuoteBod
 
   const result = await withTransaction(
     async (client) => {
+      // The window counts every check attempt (PASS/REJECT/REVIEW). The advisory
+      // lock serializes one owner's requests so concurrent ones cannot all read
+      // the same count and slip past the limit; it is released at commit/rollback.
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [ownerId]);
+      const { rows: windowRows } = await client.query<{ n: number; retry_after: string | null }>(
+        `SELECT count(*)::int AS n,
+                ceil(extract(epoch from (min(created_at) + make_interval(secs => $2) - now()))) AS retry_after
+           FROM quote_checks
+          WHERE owner_id = $1 AND created_at > now() - make_interval(secs => $2)`,
+        [ownerId, QUOTE_RATE_LIMIT.windowSeconds],
+      );
+      if ((windowRows[0]?.n ?? 0) >= QUOTE_RATE_LIMIT.max) {
+        const wait = Number(windowRows[0]?.retry_after ?? QUOTE_RATE_LIMIT.windowSeconds);
+        throw new ApiError("RATE_LIMITED", {
+          retryAfterSeconds: Math.min(QUOTE_RATE_LIMIT.windowSeconds, Math.max(1, wait)),
+        });
+      }
       const recipient = await getRecipient(client, ownerId, body.recipientId);
       if (!recipient) throw ApiError.notFound();
       if (recipient.country !== "TH" || recipient.currency !== "THB") {
