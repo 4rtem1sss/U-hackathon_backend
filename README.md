@@ -109,3 +109,18 @@ export const POST = withHandler(
 
 Throw `new ApiError("INVALID_STATE")` (etc.) for expected failures; any other thrown
 error becomes `500 INTERNAL_ERROR` with only the request ID (no stack or message).
+
+## Try the full flow locally (no part 4 needed)
+
+Settlement uses the in-memory fake module (`SETTLEMENT_MODULE=fake`), so no Fuji wallet is needed. Sessions and quotes come from a seed script until part 2's endpoints land.
+
+```bash
+eval "$(bash scripts/test-db.sh start | grep '^export')"   # local Postgres 16, prints DATABASE_URL
+pnpm db:migrate
+DESTINATION_SETTLEMENT_ADDRESS=0x1111111111111111111111111111111111111111 SETTLEMENT_MODULE=fake pnpm dev &
+
+eval "$(node scripts/demo-seed.mjs)"                       # session cookie + USD 10.00 quote
+SCENARIO=HAPPY_PATH bash scripts/demo-flow.sh              # or PAYOUT_FAILED / FUNDING_DECLINED
+```
+
+Each seeded quote can be used once; run `demo-seed.mjs` again for the next scenario. Use `pnpm test` with `DATABASE_URL` set to run the full test suite, including the DB and API tests.
