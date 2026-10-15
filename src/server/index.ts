@@ -5,4 +5,6 @@ export * from "./mapping";
 export * from "./snapshots";
 export * from "./transfers";
 export * from "./funding";
+export * from "./advance";
+export * from "./payout";
 export * from "./http";
