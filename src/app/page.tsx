@@ -30,6 +30,8 @@ export default function SendPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [recipient, setRecipient] = useState<Recipient | null>(null);
   const [recipientFailed, setRecipientFailed] = useState(false);
+  // While the new-recipient form is open, a quote would go to the old recipient.
+  const [editingRecipient, setEditingRecipient] = useState(false);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoting, setQuoting] = useState(false);
   const [checksBlock, setChecksBlock] = useState<ChecksBlock | null>(null);
@@ -80,7 +82,7 @@ export default function SendPage() {
       inputRef.current?.focus();
       return false;
     }
-    if (!recipient) return false;
+    if (!recipient || editingRecipient) return false;
     setQuoting(true);
     setChecksBlock(null);
     try {
@@ -135,10 +137,10 @@ export default function SendPage() {
         <h1 id="send-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">{t("send.title")}</h1>
         <div className="mt-8 space-y-6">
           <AmountField value={amount} onChange={onAmountChange} onBlur={onAmountBlur} errorText={fieldError} inputRef={inputRef} />
-          <RecipientCard recipient={recipient} failed={recipientFailed} onChange={onRecipientChange} />
+          <RecipientCard recipient={recipient} failed={recipientFailed} onChange={onRecipientChange} onEditingChange={setEditingRecipient} />
         </div>
         {checksBlock && <ChecksAlert code={checksBlock} />}
-        <Button type="submit" className="mt-8 h-12 w-full text-base font-semibold" disabled={quoting || !recipient}>
+        <Button type="submit" className="mt-8 h-12 w-full text-base font-semibold" disabled={quoting || !recipient || editingRecipient}>
           {quoting && <Loader2 className="animate-spin" aria-hidden />}
           {t("send.continue")}
         </Button>

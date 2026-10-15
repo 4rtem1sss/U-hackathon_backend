@@ -7,15 +7,21 @@ import type { Recipient } from "@/web/api/types";
 import { initials, maskAccount } from "@/web/format";
 import { useT } from "@/web/i18n/LanguageProvider";
 
-type Props = { recipient: Recipient | null; failed: boolean; onChange(r: Recipient): void };
+type Props = { recipient: Recipient | null; failed: boolean; onChange(r: Recipient): void; onEditingChange(editing: boolean): void };
 
-export function RecipientCard({ recipient, failed, onChange }: Props) {
+export function RecipientCard({ recipient, failed, onChange, onEditingChange }: Props) {
   const { t } = useT();
   const [editing, setEditing] = useState(false);
   const changeRef = useRef<HTMLButtonElement>(null);
 
+  function open() {
+    setEditing(true);
+    onEditingChange(true);
+  }
+
   function close() {
     setEditing(false);
+    onEditingChange(false);
     // Return focus after the card re-renders with the button.
     requestAnimationFrame(() => changeRef.current?.focus());
   }
@@ -38,7 +44,7 @@ export function RecipientCard({ recipient, failed, onChange }: Props) {
                   {recipient.bankLabel} · {maskAccount(recipient.accountDisplay)}
                 </p>
               </div>
-              <Button ref={changeRef} type="button" variant="outline" onClick={() => setEditing(true)}>
+              <Button ref={changeRef} type="button" variant="outline" onClick={open}>
                 {t("recipient.change")}
               </Button>
             </>
