@@ -4,7 +4,6 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { EvidenceTag } from "@/components/common/EvidenceTag";
 import { SummaryRow } from "@/components/common/SummaryRow";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/web/api/ApiProvider";
@@ -97,15 +96,10 @@ export function ReviewStep({ quote, recipient, onEdit, onNewQuote, quoting }: Pr
           {quote.checks && (
             <SummaryRow
               label={t("review.checks")}
-              value={
-                <span className="inline-flex items-center gap-2">
-                  {t("review.checksPassed")}
-                  <EvidenceTag tag="SIMULATED" />
-                </span>
-              }
+              value={t("review.checksPassed")}
             />
           )}
-          <SummaryRow label={t("send.arrival")} value={t("send.timing")} />
+          <SummaryRow label={t("send.arrival")} value={quote.arrivalEstimate ?? t("send.arrivalTime")} />
         </dl>
       </div>
 

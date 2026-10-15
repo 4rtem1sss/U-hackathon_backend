@@ -76,7 +76,7 @@ export function Timeline({ view, snapshot, className }: { view: TransferView; sn
             <div className="min-w-0 flex-1 pt-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={cn("font-semibold", step.state === "todo" && "text-muted-foreground")}>{t(step.labelKey)}</span>
-                <EvidenceTag tag={step.tag} />
+                {step.tag !== "SIMULATED" && <EvidenceTag tag={step.tag} />}
                 <span className="sr-only">{t(`state.${step.state}` as const)}</span>
               </div>
               {time && <p className="mt-1 text-sm text-muted-foreground">{formatDateTime(time, lang)}</p>}

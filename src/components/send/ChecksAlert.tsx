@@ -1,7 +1,6 @@
 "use client";
 
 import { ShieldAlert, ShieldQuestion } from "lucide-react";
-import { EvidenceTag } from "@/components/common/EvidenceTag";
 import { useT } from "@/web/i18n/LanguageProvider";
 import { cn } from "@/web/utils";
 
@@ -21,7 +20,6 @@ export function ChecksAlert({ code }: { code: ChecksBlock }) {
     >
       <Icon className="mt-0.5 size-5 shrink-0" aria-hidden />
       <p className="flex-1">{t(`checks.${code}` as const)}</p>
-      <EvidenceTag tag="SIMULATED" />
     </div>
   );
 }

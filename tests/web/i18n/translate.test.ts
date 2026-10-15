@@ -21,7 +21,14 @@ describe("i18n", () => {
     expect(translate("th", "review.pay", { amount: "$10.00" })).toBe("ชำระ $10.00");
     expect(translate("en", "review.pay")).toBe("Pay {amount}");
   });
-  it("keeps the required completion copy", () => {
-    expect(translate("en", "receipt.summary")).toBe("Demo completed — THB payout simulated.");
+  it("keeps the required completion and honesty copy", () => {
+    expect(translate("en", "receipt.summary")).toBe("Transfer complete.");
+    expect(translate("en", "footer.note")).toBe("Bank steps are simulated. USDC settles on Avalanche Fuji testnet.");
+  });
+  it("does not mention test mode in the send form copy", () => {
+    for (const key of ["send.amountHelp", "send.error.TOO_LARGE"] as const) {
+      expect(translate("en", key)).not.toMatch(/test mode/i);
+      expect(translate("th", key)).not.toMatch(/ทดสอบ/);
+    }
   });
 });

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Sans_Thai } from "next/font/google";
 import { PresenterPanel } from "@/components/demo/PresenterPanel";
+import { Footer } from "@/components/shell/Footer";
 import { Header } from "@/components/shell/Header";
 import { MockBanner } from "@/components/shell/MockBanner";
 import { Toaster } from "@/components/ui/sonner";
@@ -13,7 +14,7 @@ const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], var
 
 export const metadata: Metadata = {
   title: "CentMe",
-  description: "Send USD to Thailand. Test-mode demo: USD funding and THB payout are simulated.",
+  description: "Send USD to Thailand. USDC settles on Avalanche Fuji testnet.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <main id="main" className="mx-auto w-full max-w-[1040px] px-4 py-8 sm:px-6 lg:py-12">
             {children}
           </main>
+          <Footer />
           <PresenterPanel />
         </Providers>
         <Toaster theme="light" richColors position="top-center" />

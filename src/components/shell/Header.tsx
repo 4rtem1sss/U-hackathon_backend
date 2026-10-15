@@ -20,9 +20,6 @@ export function Header() {
           <Logo />
         </Link>
         <div className="flex items-center gap-3">
-          <span className="rounded-full bg-highlight px-3 py-1 text-xs font-semibold uppercase tracking-wide text-foreground">
-            {t("header.testMode")}
-          </span>
           <Button variant="ghost" onClick={() => setLang(lang === "en" ? "th" : "en")} aria-label={t("header.langAria")}>
             {t("header.langToggle")}
           </Button>
