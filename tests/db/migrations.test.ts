@@ -3,7 +3,7 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 import { runMigrations } from "../../scripts/migrate.mjs";
 import { createEmptyDb, describeDb } from "./helpers";
 
-const MIGRATIONS = ["0001_init.sql", "0002_notification.sql"];
+const MIGRATIONS = ["0001_init.sql", "0002_notification.sql", "0003_part2_quotes.sql"];
 
 const TABLES = [
   "demo_sessions",
@@ -15,6 +15,7 @@ const TABLES = [
   "funding_attempts",
   "settlement_attempts",
   "payout_attempts",
+  "quote_checks",
   "schema_migrations",
 ];
 

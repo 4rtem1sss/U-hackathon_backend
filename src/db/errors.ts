@@ -42,4 +42,5 @@ export const CONSTRAINTS = {
   settlementSignerNonce: "settlement_attempts_signer_nonce_key",
   settlementTxHash: "settlement_attempts_tx_hash_key",
   settlementOneUnresolvedPerSigner: "settlement_attempts_one_unresolved_per_signer",
+  quotesCheckId: "quotes_check_id_key",
 } as const;

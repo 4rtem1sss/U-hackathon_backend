@@ -29,6 +29,8 @@ export interface NewQuote {
   fixtureVersion: string;
   chainId: number;
   expiresAt: Date;
+  checkId?: string;
+  checkResult?: "PASS";
 }
 
 export async function insertQuote(db: Queryable, q: NewQuote): Promise<QuoteRow> {
@@ -37,8 +39,9 @@ export async function insertQuote(db: Queryable, q: NewQuote): Promise<QuoteRow>
        id, owner_id, recipient_id, recipient_snapshot, source_country, destination_country,
        source_currency, destination_currency, source_debit_minor, fee_minor,
        conversion_principal_minor, fx_rate_numerator, fx_rate_denominator,
-       destination_net_minor, settlement_token_units, fixture_version, chain_id, expires_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+       destination_net_minor, settlement_token_units, fixture_version, chain_id, expires_at,
+       check_id, check_result)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
      RETURNING *`,
     [
       q.id,
@@ -59,6 +62,8 @@ export async function insertQuote(db: Queryable, q: NewQuote): Promise<QuoteRow>
       q.fixtureVersion,
       q.chainId,
       q.expiresAt,
+      q.checkId ?? null,
+      q.checkResult ?? null,
     ],
   );
   return mapRow<QuoteRow>(rows[0]);

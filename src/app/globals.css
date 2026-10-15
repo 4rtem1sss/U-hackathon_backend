@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Logo palette (spec section 4). shadcn names on the left; spec token in the comment. */
+:root {
+  --radius: 0.75rem;
+  --background: #faf9f5; /* --bg */
+  --foreground: #2e4057; /* --ink */
+  --card: #ffffff; /* --surface */
+  --card-foreground: #2e4057;
+  --popover: #ffffff;
+  --popover-foreground: #2e4057;
+  --primary: #8bc34a; /* --cta, text stays navy */
+  --primary-foreground: #2e4057;
+  --secondary: #f1efe8;
+  --secondary-foreground: #2e4057;
+  --muted: #f1efe8;
+  --muted-foreground: #5b6b7d; /* --muted */
+  --accent: #f1efe8; /* shadcn hover surface, not the amber */
+  --accent-foreground: #2e4057;
+  --destructive: #dc2626; /* --danger */
+  --border: #e3e1da;
+  --input: #d6d3ca;
+  --ring: #2e4057;
+  --brand: #2e4057;
+  --pending: #b45309;
+  --pending-ink: #92400e; /* pending text on pending tints (AA) */
+  --done: #8bc34a; /* fill only */
+  --done-text: #3f7d20;
+  --highlight: #edae49; /* spec --accent: fill only, never text */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-pending: var(--pending);
+  --color-pending-ink: var(--pending-ink);
+  --color-done: var(--done);
+  --color-done-text: var(--done-text);
+  --color-highlight: var(--highlight);
+  --font-sans: var(--font-plex), var(--font-plex-thai), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes centme-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-check path,
+.draw-check polyline {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: centme-draw 300ms ease-out forwards;
+}
+
+@keyframes centme-travel {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.token-travel {
+  animation: centme-travel 1.2s ease-in-out infinite;
+}
