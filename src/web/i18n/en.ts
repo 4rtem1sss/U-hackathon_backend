@@ -26,7 +26,7 @@ export const en = {
   "recipient.error.name": "Enter a name using letters only (up to 60).",
   "recipient.error.bankCode": "Choose a bank.",
   "recipient.error.accountNumber": "Enter 10 to 12 digits.",
-  "error.recipientLimit": "This demo already has 10 recipients. Reset the demo to add more.",
+  "error.recipientLimit": "This demo session already has 10 recipients. Open a new private window to start a fresh session.",
   "send.estimate": "Estimate",
   "send.theyReceive": "They receive",
   "send.fee": "Fee",

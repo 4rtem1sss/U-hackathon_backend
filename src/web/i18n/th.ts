@@ -28,7 +28,7 @@ export const th: Record<MessageKey, string> = {
   "recipient.error.name": "กรอกชื่อเป็นตัวอักษรเท่านั้น (ไม่เกิน 60 ตัว)",
   "recipient.error.bankCode": "กรุณาเลือกธนาคาร",
   "recipient.error.accountNumber": "กรอกตัวเลข 10 ถึง 12 หลัก",
-  "error.recipientLimit": "เดโมนี้มีผู้รับครบ 10 คนแล้ว รีเซ็ตเดโมเพื่อเพิ่มใหม่",
+  "error.recipientLimit": "เซสชันเดโมนี้มีผู้รับครบ 10 คนแล้ว เปิดหน้าต่างส่วนตัวใหม่เพื่อเริ่มเซสชันใหม่",
   "send.estimate": "ประมาณการ",
   "send.theyReceive": "ผู้รับจะได้รับ",
   "send.fee": "ค่าธรรมเนียม",
