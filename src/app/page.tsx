@@ -16,6 +16,7 @@ import { readCheckScenario } from "@/web/demoScenario";
 import { errorText } from "@/web/i18n/errorText";
 import { useT } from "@/web/i18n/LanguageProvider";
 import { estimateQuote, parseUsdInput, type ParseError } from "@/web/money";
+import { pickRecipient, RECIPIENT_KEY } from "@/web/recipientChoice";
 import { browserStorage } from "@/web/storage";
 
 const AMOUNT_KEY = "centme:amount";
@@ -43,7 +44,7 @@ export default function SendPage() {
 
   useEffect(() => {
     api.getRecipients()
-      .then((list) => setRecipient(list[0] ?? null))
+      .then((list) => setRecipient(pickRecipient(list, browserStorage("session").getItem(RECIPIENT_KEY))))
       .catch(() => setRecipientFailed(true));
   }, [api]);
 
@@ -57,6 +58,14 @@ export default function SendPage() {
     setServerError(null);
     setChecksBlock(null);
     browserStorage("session").setItem(AMOUNT_KEY, value);
+  }
+
+  function onRecipientChange(r: Recipient) {
+    setRecipient(r);
+    setQuote(null);
+    setChecksBlock(null);
+    setServerError(null);
+    browserStorage("session").setItem(RECIPIENT_KEY, r.id);
   }
 
   function onAmountBlur() {
@@ -125,7 +134,7 @@ export default function SendPage() {
         <h1 id="send-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">{t("send.title")}</h1>
         <div className="mt-8 space-y-6">
           <AmountField value={amount} onChange={onAmountChange} onBlur={onAmountBlur} errorText={fieldError} inputRef={inputRef} />
-          <RecipientCard recipient={recipient} failed={recipientFailed} />
+          <RecipientCard recipient={recipient} failed={recipientFailed} onChange={onRecipientChange} />
         </div>
         {checksBlock && <ChecksAlert code={checksBlock} />}
         <Button type="submit" className="mt-8 h-12 w-full text-base font-semibold" disabled={quoting || !recipient}>
