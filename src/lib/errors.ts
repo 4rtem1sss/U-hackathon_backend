@@ -29,6 +29,11 @@ export const ERROR_CODES = {
     retryable: false,
     message: "This action is not allowed in the transfer's current state.",
   },
+  RECIPIENT_LIMIT: {
+    status: 409,
+    retryable: false,
+    message: "This demo session already has the maximum number of recipients.",
+  },
   QUOTE_EXPIRED: { status: 410, retryable: false, message: "This quote has expired." },
   UNSUPPORTED_CORRIDOR: {
     status: 422,
