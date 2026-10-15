@@ -27,12 +27,10 @@ export function Header() {
           <Logo />
         </Link>
         <div className="flex items-center gap-3">
-          <span
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-secondary px-3 text-sm font-medium text-foreground sm:px-4"
-            aria-label={status}
-          >
+          <span className="inline-flex h-10 items-center gap-2 rounded-full bg-secondary px-3 text-sm font-medium text-foreground sm:px-4">
             <span aria-hidden className={cn("size-2 rounded-full", onFuji ? "bg-done" : "bg-pending")} />
-            <span aria-hidden className="hidden sm:inline">{status}</span>
+            {/* Real text, visually hidden below 640px: aria-label on a plain span is not announced. */}
+            <span className="sr-only sm:not-sr-only">{status}</span>
           </span>
           <Button
             variant="outline"

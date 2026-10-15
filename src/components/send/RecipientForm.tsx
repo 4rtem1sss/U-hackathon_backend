@@ -29,6 +29,8 @@ export function RecipientForm({ onSaved, onCancel }: { onSaved(r: Recipient): vo
   const [accountNumber, setAccountNumber] = useState("");
   const [errors, setErrors] = useState<Partial<Record<Field, true>>>({});
   const [saving, setSaving] = useState(false);
+  // Enter can fire twice before `saving` re-renders; the ref blocks the second POST.
+  const inFlight = useRef(false);
   const refs = { name: useRef<HTMLInputElement>(null), bankCode: useRef<HTMLSelectElement>(null), accountNumber: useRef<HTMLInputElement>(null) };
 
   function showErrors(fields: Field[]) {
@@ -38,12 +40,14 @@ export function RecipientForm({ onSaved, onCancel }: { onSaved(r: Recipient): vo
 
   async function onSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
+    if (inFlight.current) return;
     const input = { name, bankCode, accountNumber };
     const parsed = newRecipientBody.safeParse(input);
     if (!parsed.success) {
       showErrors(FIELDS.filter((f) => parsed.error.issues.some((i) => i.path[0] === f)));
       return;
     }
+    inFlight.current = true;
     setSaving(true);
     try {
       onSaved(await api.createRecipient({ name, bankCode: parsed.data.bankCode, accountNumber }));
@@ -52,6 +56,7 @@ export function RecipientForm({ onSaved, onCancel }: { onSaved(r: Recipient): vo
       if (bad.length > 0) showErrors(bad);
       else toast.error(errorText(err, t));
     } finally {
+      inFlight.current = false;
       setSaving(false);
     }
   }
