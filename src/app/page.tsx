@@ -7,6 +7,7 @@ import { AmountField } from "@/components/send/AmountField";
 import { EstimateCard } from "@/components/send/EstimateCard";
 import { ChecksAlert, type ChecksBlock } from "@/components/send/ChecksAlert";
 import { RecipientCard } from "@/components/send/RecipientCard";
+import { ReviewStep } from "@/components/review/ReviewStep";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/web/api/ApiProvider";
 import { isApiError } from "@/web/api/errors";
@@ -106,8 +107,16 @@ export default function SendPage() {
   }
 
   if (step === 2 && quote && recipient) {
-    // Task 11 replaces this placeholder with <ReviewStep />.
-    return <p>Review step</p>;
+    return (
+      <ReviewStep
+        key={quote.id}
+        quote={quote}
+        recipient={recipient}
+        onEdit={() => setStep(1)}
+        onNewQuote={requestQuote}
+        quoting={quoting}
+      />
+    );
   }
 
   return (
