@@ -35,6 +35,16 @@ export const ERROR_CODES = {
     retryable: false,
     message: "Only the US to Thailand demo corridor is supported.",
   },
+  CHECKS_REJECTED: {
+    status: 422,
+    retryable: false,
+    message: "Simulated checks rejected this transfer.",
+  },
+  CHECKS_REVIEW_REQUIRED: {
+    status: 422,
+    retryable: false,
+    message: "Held for review (simulated). No quote was issued.",
+  },
   RATE_LIMITED: { status: 429, retryable: true, message: "Too many requests. Please slow down." },
   DEMO_BUDGET_EXCEEDED: {
     status: 429,
