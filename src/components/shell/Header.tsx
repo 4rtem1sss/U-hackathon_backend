@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { Flag } from "@/components/shell/Flag";
 import { Button } from "@/components/ui/button";
+import { useApi } from "@/web/api/ApiProvider";
 import { useT } from "@/web/i18n/LanguageProvider";
+import { cn } from "@/web/utils";
 
 export function Header() {
   const { t, lang, setLang } = useT();
+  const { modes } = useApi();
+  // Settlement runs in the transfers group, so that flag decides what the pill claims.
+  const onFuji = modes.transfers === "real";
+  const status = onFuji ? t("header.fuji") : t("header.mock");
   return (
     <header className="border-b bg-card">
       <a
@@ -15,13 +22,26 @@ export function Header() {
       >
         {t("header.skip")}
       </a>
-      <div className="mx-auto flex h-16 w-full max-w-[1040px] items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-20 w-full max-w-[1040px] items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
           <Logo />
         </Link>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" onClick={() => setLang(lang === "en" ? "th" : "en")} aria-label={t("header.langAria")}>
-            {t("header.langToggle")}
+          <span
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-secondary px-3 text-sm font-medium text-foreground sm:px-4"
+            aria-label={status}
+          >
+            <span aria-hidden className={cn("size-2 rounded-full", onFuji ? "bg-done" : "bg-pending")} />
+            <span aria-hidden className="hidden sm:inline">{status}</span>
+          </span>
+          <Button
+            variant="outline"
+            className="h-10 gap-2 px-3 text-sm font-medium"
+            onClick={() => setLang(lang === "en" ? "th" : "en")}
+            aria-label={t("header.langAria")}
+          >
+            <Flag country={lang === "en" ? "TH" : "US"} />
+            <span aria-hidden>{t("header.langCode")}</span>
           </Button>
         </div>
       </div>

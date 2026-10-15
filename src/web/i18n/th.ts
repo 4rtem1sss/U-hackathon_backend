@@ -3,7 +3,9 @@ import type { MessageKey } from "./en";
 export const th: Record<MessageKey, string> = {
   "header.skip": "ข้ามไปยังเนื้อหา",
   "header.mockData": "โหมดข้อมูลจำลอง: ไม่มีธุรกรรมบน Fuji",
-  "header.langToggle": "English",
+  "header.langCode": "EN",
+  "header.fuji": "Fuji testnet",
+  "header.mock": "โหมดจำลอง",
   "header.langAria": "เปลี่ยนเป็นภาษาอังกฤษ",
   "common.loading": "กำลังโหลด…",
   "send.title": "โอนเงินไปประเทศไทย",

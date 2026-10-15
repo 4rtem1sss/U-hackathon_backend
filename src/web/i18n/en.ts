@@ -1,7 +1,9 @@
 export const en = {
   "header.skip": "Skip to content",
   "header.mockData": "Mock mode: no Fuji transaction.",
-  "header.langToggle": "ภาษาไทย",
+  "header.langCode": "TH",
+  "header.fuji": "Fuji testnet",
+  "header.mock": "Mock mode",
   "header.langAria": "Switch language to Thai",
   "common.loading": "Loading…",
   "send.title": "Send money to Thailand",
